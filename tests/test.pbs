@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -N test
+#PBS -q vulcan_batch
+#PBS -l nodes=2:ppn=8:vulcan
+#PBS -l walltime=00:05:00
+#PBS -V
+
+user=`whoami`
+cd /clusterfs/vulcan/pscratch/$user/taskfarmer
+
+shuf tests/commands.txt | head -n 200 > jobs.txt
+
+if [ -f log ]; then
+	rm log
+fi
+
+module load openmpi
+mpirun -v -np 16 src/taskfarmer -f jobs.txt -v

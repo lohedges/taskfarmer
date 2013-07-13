@@ -1,0 +1,18 @@
+#!/bin/bash
+#PBS -N test
+#PBS -q vulcan_batch
+#PBS -l nodes=2:ppn=8:vulcan
+#PBS -l walltime=00:05:00
+#PBS -V
+
+user=`whoami`
+cd /clusterfs/vulcan/pscratch/$user/taskfarmer/python
+
+shuf tests/commands.txt | head -n 200 > jobs.txt
+
+if [ -f log ]; then
+	rm log
+fi
+
+module load python/2.7.3 mpi4py
+mpirun -v -np 16 taskfarmer.py -f jobs.txt -v
