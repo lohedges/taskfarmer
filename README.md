@@ -32,9 +32,12 @@ natively support Python shared libraries on their compute nodes.
 ## Installation
 A `Makefile` is included for building and installing TaskFarmer. You will first
 need to make sure that you have [Open MPI](http://www.open-mpi.org/) installed.
-If you use an alternative MPI implementation (e.g. cray-mpich2) you will need
-to change the compiler in `config.mk` accordingly. You can also use `config.mk`
-to configure other options, such as the installation path.
+If you use an alternative MPI implementation, such as `aprun` on the Cray Linux
+Environment (CLE), you will need to change the compiler in `config.mk`
+accordingly (change to `cc` for compiling on
+[Hopper](http://www.nersc.gov/users/computational-systems/hopper/) at
+[NERSC](http://www.nersc.gov/). You can also use `config.mk` to configure other
+options, such as the installation path.
 
 To compile TaskFarmer, then install the executable and man page:
 
