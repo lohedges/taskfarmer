@@ -36,7 +36,7 @@ If you use an alternative MPI implementation, such as `aprun` on the Cray Linux
 Environment (CLE), you will need to change the compiler in `config.mk`
 accordingly (change to `cc` for compiling on
 [Hopper](http://www.nersc.gov/users/computational-systems/hopper/) at
-[NERSC](http://www.nersc.gov/). You can also use `config.mk` to configure other
+[NERSC](http://www.nersc.gov/)). You can also use `config.mk` to configure other
 options, such as the installation path.
 
 To compile TaskFarmer, then install the executable and man page:
