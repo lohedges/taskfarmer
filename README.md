@@ -29,9 +29,29 @@ A Python implementation is provided in the `python/` directory, although this
 is known to suffer from significant start up lag on clusters that don't
 natively support Python shared libraries on their compute nodes.
 
+## Installation
+A `Makefile` is included for building and installing TaskFarmer. You will first
+need to make sure that you have [Open MPI](http://www.open-mpi.org/) installed.
+If you use an alternative MPI implementation (e.g. cray-mpich2) you will need
+to change the compiler in `config.mk` accordingly. You can also use `config.mk`
+to configure other options, such as the installation path.
+
+To compile TaskFarmer, then install the executable and man page:
+
+```bash
+$ make
+$ sudo make install
+```
+
+TaskFarmer can be completely removed from your system as follows:
+
+```bash
+$ sudo make uninstall
+```
+
 ## Usage
-``` sh
-	mpirun -np CORES taskfarmer [-h] -f FILE [-v] [-w] [-s SLEEP_TIME]
+``` bash
+$ mpirun -np CORES taskfarmer [-h] -f FILE [-v] [-w] [-s SLEEP_TIME]
 ```
 
 TaskFarmer supports the following short- and long-form command-line
@@ -56,8 +76,8 @@ exits when the job file is empty.
 ## Examples
 Try the following:
 
-``` sh
-	shuf tests/commands.txt | head -n 100 > jobs.txt | mpirun -np 4 src/taskfarmer -f jobs.txt
+``` bash
+$ shuf tests/commands.txt | head -n 100 > jobs.txt | mpirun -np 4 src/taskfarmer -f jobs.txt
 ```
 
 An example PBS submit script is included in the `tests` directory.
@@ -67,14 +87,14 @@ An example PBS submit script is included in the `tests` directory.
   to a separate log file to avoid littering the standard output of TaskFarmer
   itself. As an example, the `jobs.txt` file could contain a command like
 
-	``` sh
-		echo "Hello, I'm a job" > job.log
+	``` bash
+	$ echo "Hello, I'm a job" > job.log
 	```
 
    with TaskFarmer launched as follows
 
-	``` sh
-		mpirun -np 4 taskfarmer -f jobs.txt > sched.log
+	``` bash
+	$ mpirun -np 4 taskfarmer -f jobs.txt > sched.log
 	```
 
 ## Words of caution

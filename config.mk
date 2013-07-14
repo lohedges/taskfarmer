@@ -6,7 +6,7 @@
 
 # Common Makefile configurations
 
-# C compiler
+# C compiler (assuming Open MPI)
 CC=mpicc
 
 # Installation directory
