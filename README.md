@@ -83,7 +83,7 @@ Try the following:
 $ shuf tests/commands.txt | head -n 100 > jobs.txt | mpirun -np 4 src/taskfarmer -f jobs.txt
 ```
 
-An example PBS submit script is included in the `tests` directory.
+A collection of example PBS batch scripts are included in the `tests/` directory.
 
 ## Tips
 * System commands in the job file should redirect their standard output

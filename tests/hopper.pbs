@@ -1,0 +1,30 @@
+#!/bin/bash
+#PBS -N test
+#PBS -q debug
+#PBS -l mppwidth=24
+#PBS -l walltime=00:05:00
+#PBS -V
+
+# get user name
+user=`whoami`
+
+# make sure we're in the right directory
+cd /scratch/scratchdirs/$user/taskfarmer
+
+# set correct compiler
+sed -i '/CC=*/c\CC=cc'
+
+# recompile code
+make clean
+make
+
+# create job list
+shuf tests/commands.txt | head -n 200 > jobs.txt
+
+# delete existing log file
+if [ -f log ]; then
+	rm log
+fi
+
+# launch task farmer
+aprun -n 24 ./src/taskfarmer -f jobs.txt -v

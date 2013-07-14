@@ -1,0 +1,33 @@
+#!/bin/bash
+#PBS -N test
+#PBS -q vulcan_debug
+#PBS -l nodes=2:ppn=8:vulcan
+#PBS -l walltime=00:05:00
+#PBS -V
+
+# get user name
+user=`whoami`
+
+# load openmpi module
+module load openmpi
+
+# make sure we're in the right directory
+cd /clusterfs/vulcan/pscratch/$user/taskfarmer
+
+# set correct compiler
+sed -i '/CC=*/c\CC=mpicc'
+
+# recompile code
+make clean
+make
+
+# create job list
+shuf tests/commands.txt | head -n 200 > jobs.txt
+
+# delete existing log file
+if [ -f log ]; then
+	rm log
+fi
+
+# launch task farmer
+mpirun -np 16 src/taskfarmer -f jobs.txt -v
