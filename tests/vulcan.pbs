@@ -15,7 +15,7 @@ module load openmpi
 cd /clusterfs/vulcan/pscratch/$user/taskfarmer
 
 # set correct compiler
-sed -i '/CC=*/c\CC=mpicc'
+sed -i '/CC=*/c\CC=mpicc' config.mk
 
 # recompile code
 make clean

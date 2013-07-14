@@ -12,7 +12,7 @@ user=`whoami`
 cd /scratch/scratchdirs/$user/taskfarmer
 
 # set correct compiler
-sed -i '/CC=*/c\CC=cc'
+sed -i '/CC=*/c\CC=cc' config.mk
 
 # recompile code
 make clean
