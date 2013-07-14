@@ -1,6 +1,6 @@
 # TaskFarmer
 
-Copyright 2013 Lester Hedges.
+Copyright &copy; 2013 Lester Hedges.
 
 ## About
 Execute a list of system commands from a job file one-by-one. This allows
