@@ -80,10 +80,10 @@ exits when the job file is empty.
 Try the following:
 
 ``` bash
-$ shuf tests/commands.txt | head -n 100 > jobs.txt | mpirun -np 4 src/taskfarmer -f jobs.txt
+$ shuf examples/commands.txt | head -n 100 > jobs.txt | mpirun -np 4 src/taskfarmer -f jobs.txt
 ```
 
-A collection of example PBS batch scripts are included in the `tests/` directory.
+A collection of example PBS batch scripts are included in the `examples/` directory.
 
 ## Tips
 * System commands in the job file should redirect their standard output

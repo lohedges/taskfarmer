@@ -22,7 +22,7 @@ make clean
 make
 
 # create job list
-shuf tests/commands.txt | head -n 200 > jobs.txt
+shuf examples/commands.txt | head -n 200 > jobs.txt
 
 # delete existing log file
 if [ -f log ]; then

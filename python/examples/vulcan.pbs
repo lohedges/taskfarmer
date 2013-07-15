@@ -12,7 +12,7 @@ user=`whoami`
 cd /clusterfs/vulcan/pscratch/$user/taskfarmer/python
 
 # create job list
-shuf tests/commands.txt | head -n 200 > jobs.txt
+shuf examples/commands.txt | head -n 200 > jobs.txt
 
 # delete existing log file
 if [ -f log ]; then
