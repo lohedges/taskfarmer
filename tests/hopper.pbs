@@ -26,5 +26,8 @@ if [ -f log ]; then
 	rm log
 fi
 
+# enable dynamic shared libraries
+export CRAY_ROOTFS=DSL
+
 # launch task farmer
 aprun -n 24 ./src/taskfarmer -f jobs.txt -v
