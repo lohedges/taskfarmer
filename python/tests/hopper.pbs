@@ -34,4 +34,4 @@ export CRAY_ROOTFS=DSL
 module load python/2.7.3 mpi4py
 
 # launch task farmer
-aprun -n 24 .taskfarmer.py -f jobs.txt -v
+aprun -n 24 ./taskfarmer.py -f jobs.txt -v
