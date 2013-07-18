@@ -164,7 +164,7 @@ int main(int argc, char **argv)
 		// try to open the job file
 		if ((fd = open(job_file, O_RDWR)) == -1)
 		{
-			printf("\"%s\" not found!\n", job_file);
+			perror("[ERROR] open");
 			MPI_Finalize();
 			exit(1);
 		}
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
 		// get file statistics
 		if (fstat(fd, &file_stats) == -1)
 		{
-			perror("fstat");
+			perror("[ERROR] fstat");
 			MPI_Finalize();
 			exit(1);
 		}
@@ -368,8 +368,8 @@ void parse_command_line_arguments(int argc, char **argv, int rank,
 				{
 					if (rank == 0)
 					{
-						printf("Error: unknown command-line option %s\n", argv[i]);
-						printf("For help run \"taskfarmer -h\"\n");
+						fprintf(stderr, "[ERROR]: Unknown command-line option %s\n", argv[i]);
+						fprintf(stderr, "For help run \"taskfarmer -h\"\n");
 					}
 
 					MPI_Finalize();
@@ -385,8 +385,8 @@ void parse_command_line_arguments(int argc, char **argv, int rank,
 	{
 		if (rank == 0)
 		{
-			printf("Error: a job file must be specified with \"-f/--file\"\n");
-			printf("For help run \"taskfarmer -h\"\n");
+			fprintf(stderr, "[ERROR]: A job file must be specified with \"-f/--file\"\n");
+			fprintf(stderr, "For help run \"taskfarmer -h\"\n");
 		}
 
 		MPI_Finalize();
@@ -423,7 +423,7 @@ void lock_file(struct flock *fl, int fd)
 	// try to lock file
 	if (fcntl(fd, F_SETLKW, fl) == -1)
 	{
-		perror("fcntl");
+		perror("[ERROR] fcntl");
 		MPI_Finalize();
 		exit(1);
 	}
@@ -444,7 +444,7 @@ void unlock_file(struct flock *fl, int fd)
 	// try to unlock file
 	if (fcntl(fd, F_SETLK, fl) == -1)
 	{
-		perror("fcntl");
+		perror("[ERROR] fcntl");
 		MPI_Finalize();
 		exit(1);
 	}
