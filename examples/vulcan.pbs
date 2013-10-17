@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -N test
 #PBS -q vulcan_debug
-#PBS -l nodes=2:ppn=8:vulcan
+#PBS -l nodes=2:ppn=8:debug-vulcan
 #PBS -l walltime=00:05:00
 #PBS -V
 
