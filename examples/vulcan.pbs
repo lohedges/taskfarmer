@@ -29,5 +29,9 @@ if [ -f log ]; then
 	rm log
 fi
 
+# disable InfiniBand support for fork
+export OMPI_MCA_mpi_warn_on_fork=0
+export OMPI_MCA_btl_openib_want_fork_support=0
+
 # launch task farmer
 mpirun -np 16 src/taskfarmer -f jobs.txt -v

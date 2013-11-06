@@ -108,6 +108,13 @@ A collection of example PBS batch scripts are included in the `examples/` direct
   or in an idle state (job file is emtpy). It is recommended to modify the job
   file using a redirection, rather than opening it and editing directly,
   e.g. `cat more_jobs >> jobs.txt`.
+* Clusters that use InfiniBand interconnects can cause problems when using fork()
+  in OpenMPI. A workaround can be achieved by disabling InfiniBand support for
+  fork by setting the following (BASH style) environment variables:
+	``` bash
+	$ export OMPI_MCA_mpi_warn_on_fork=0
+	$ export OMPI_MCA_btl_openib_want_fork_support=0
+	```
 * For clusters that don't impose a wall time, TaskFarmer provides a way of
   running an infinite number of jobs. As long as the job file isn't empty jobs
   will continue to be launched on free cores within the allocation. Use your new
