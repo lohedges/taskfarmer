@@ -124,6 +124,16 @@ e.g.
 cat
 more_jobs >> jobs.txt
 .IP \[bu]
+Clusters that use InfiniBand interconnects can cause problems when using fork()
+in OpenMPI. A workaround can be achieved by disabling InfiniBand support for
+fork by setting the following (BASH style) environment variables:
+.IP
+.B export
+OMPI_MCA_mpi_warn_on_fork=0
+.IP
+.B export
+OMPI_MCA_btl_openib_want_fork_support=0
+.IP \[bu]
 For clusters that don't impose a wall time,
 .B
 TaskFarmer
