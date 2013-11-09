@@ -1,5 +1,5 @@
 # TaskFarmer executable
-src/scheduler
+src/taskfarmer
 
 # Log file for testing
 log
