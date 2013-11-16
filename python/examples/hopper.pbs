@@ -24,11 +24,11 @@ shuf examples/commands.txt | head -n 200 > jobs.txt
 
 # delete existing log file
 if [ -f log ]; then
-	rm log
+    rm log
 fi
 
 # enable dynamic shared libraries
-export CRAY_ROOTFS=DSL	
+export CRAY_ROOTFS=DSL  
 
 # load required python modules
 module load python/2.7.3 mpi4py

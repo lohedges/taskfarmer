@@ -26,7 +26,7 @@ shuf examples/commands.txt | head -n 200 > jobs.txt
 
 # delete existing log file
 if [ -f log ]; then
-	rm log
+    rm log
 fi
 
 # disable InfiniBand support for fork
