@@ -119,172 +119,172 @@ void unlock_file(struct flock*, int);
 // BEGIN MAIN FUNCTION
 int main(int argc, char **argv)
 {
-	int i;
-	int rank, size;
+    int i;
+    int rank, size;
 
-	MPI_Init(&argc, &argv);                 // start MPI
-	MPI_Barrier(MPI_COMM_WORLD);            // wait for all processes to start
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);   // get current process id
-	MPI_Comm_size(MPI_COMM_WORLD, &size);   // get number of processes
+    MPI_Init(&argc, &argv);                 // start MPI
+    MPI_Barrier(MPI_COMM_WORLD);            // wait for all processes to start
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);   // get current process id
+    MPI_Comm_size(MPI_COMM_WORLD, &size);   // get number of processes
 
-	// set default parameters
-	char job_file[1024];
-	bool verbose = false;
-	bool wait_on_idle = false;
-	int sleep_time = 300;
+    // set default parameters
+    char job_file[1024];
+    bool verbose = false;
+    bool wait_on_idle = false;
+    int sleep_time = 300;
 
-	// initialize buffer pointers
-	char *buffer_in;
-	char *buffer_out;
-	char *system_command;
+    // initialize buffer pointers
+    char *buffer_in;
+    char *buffer_out;
+    char *system_command;
 
-	// file statistics struct
-	struct stat file_stats;
+    // file statistics struct
+    struct stat file_stats;
 
-	// parse all command-line arguments
-	parse_command_line_arguments(argc, argv, rank,
-			job_file, &verbose, &wait_on_idle, &sleep_time);
+    // parse all command-line arguments
+    parse_command_line_arguments(argc, argv, rank,
+            job_file, &verbose, &wait_on_idle, &sleep_time);
 
-	// initialize file lock structure
-	struct flock fl;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;
-	fl.l_pid = getpid();
+    // initialize file lock structure
+    struct flock fl;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0;
+    fl.l_pid = getpid();
 
-	// file descriptor
-	int fd;
+    // file descriptor
+    int fd;
 
-	// number of bytes read from file
-	int num_read;
+    // number of bytes read from file
+    int num_read;
 
-	// loop indefinitely
-	while (true)
-	{
-		// try to open the job file
-		if ((fd = open(job_file, O_RDWR)) == -1)
-		{
-			perror("[ERROR] open");
-			MPI_Finalize();
-			exit(1);
-		}
+    // loop indefinitely
+    while (true)
+    {
+        // try to open the job file
+        if ((fd = open(job_file, O_RDWR)) == -1)
+        {
+            perror("[ERROR] open");
+            MPI_Finalize();
+            exit(1);
+        }
 
-		// attempt to lock file
-		lock_file(&fl, fd);
+        // attempt to lock file
+        lock_file(&fl, fd);
 
-		// get file statistics
-		if (fstat(fd, &file_stats) == -1)
-		{
-			perror("[ERROR] fstat");
-			MPI_Finalize();
-			exit(1);
-		}
+        // get file statistics
+        if (fstat(fd, &file_stats) == -1)
+        {
+            perror("[ERROR] fstat");
+            MPI_Finalize();
+            exit(1);
+        }
 
-		// allocate buffer memory
-		buffer_in = malloc(file_stats.st_size);
-		buffer_out = malloc(file_stats.st_size);
+        // allocate buffer memory
+        buffer_in = malloc(file_stats.st_size);
+        buffer_out = malloc(file_stats.st_size);
 
-		// read job file into buffer
-		num_read = read(fd, buffer_in, file_stats.st_size);
+        // read job file into buffer
+        num_read = read(fd, buffer_in, file_stats.st_size);
 
-		// check that there are jobs to process
-		if (num_read > 0)
-		{
-			// read first job
-			for (i=0;i<num_read;i++)
-			{
-				// found newline
-				if (buffer_in[i] == '\n') break;
-			}
+        // check that there are jobs to process
+        if (num_read > 0)
+        {
+            // read first job
+            for (i=0;i<num_read;i++)
+            {
+                // found newline
+                if (buffer_in[i] == '\n') break;
+            }
 
-			// allocate memory for system command
-			system_command = malloc((i+1)*sizeof(char));
+            // allocate memory for system command
+            system_command = malloc((i+1)*sizeof(char));
 
-			// copy job into system command buffer and terminate
-			strncpy(system_command, buffer_in, i);
-			system_command[i] = '\0';
+            // copy job into system command buffer and terminate
+            strncpy(system_command, buffer_in, i);
+            system_command[i] = '\0';
 
-			// copy remaining jobs into output buffer and terminate
-			strcpy(buffer_out, buffer_in+i+1);
-			buffer_out[num_read-i-1] = '\0';
+            // copy remaining jobs into output buffer and terminate
+            strcpy(buffer_out, buffer_in+i+1);
+            buffer_out[num_read-i-1] = '\0';
 
-			// return to start of file
-			lseek(fd, 0, SEEK_SET);
+            // return to start of file
+            lseek(fd, 0, SEEK_SET);
 
-			// truncate file
-			ftruncate(fd, 0);
+            // truncate file
+            ftruncate(fd, 0);
 
-			// write truncated job list buffer to file
-			write(fd, buffer_out, strlen(buffer_out));
+            // write truncated job list buffer to file
+            write(fd, buffer_out, strlen(buffer_out));
 
-			// attempt to unlock file
-			unlock_file(&fl, fd);
+            // attempt to unlock file
+            unlock_file(&fl, fd);
 
-			// close file descriptor
-			close(fd);
+            // close file descriptor
+            close(fd);
 
-			// free job file buffers
-			free(buffer_in);
-			free(buffer_out);
+            // free job file buffers
+            free(buffer_in);
+            free(buffer_out);
 
-			// report job launch
-			if (verbose)
-				printf("Rank %04d launching: %s\n", rank, system_command);
+            // report job launch
+            if (verbose)
+                printf("Rank %04d launching: %s\n", rank, system_command);
 
-			// launch job
-			if (system(system_command) != 0)
-				printf("Warning: system command failed, %s\n", system_command);
+            // launch job
+            if (system(system_command) != 0)
+                printf("Warning: system command failed, %s\n", system_command);
 
-			// free system command buffer
-			free(system_command);
-		}
+            // free system command buffer
+            free(system_command);
+        }
 
-		else
-		{
-			if (wait_on_idle)
-			{
-				// report process wait
-				if (verbose)
-					printf("Rank %04d waiting for more jobs\n", rank);
+        else
+        {
+            if (wait_on_idle)
+            {
+                // report process wait
+                if (verbose)
+                    printf("Rank %04d waiting for more jobs\n", rank);
 
-				// attempt to unlock file
-				unlock_file(&fl, fd);
+                // attempt to unlock file
+                unlock_file(&fl, fd);
 
-				// close file descriptor
-				close(fd);
+                // close file descriptor
+                close(fd);
 
-				// free memory
-				free(buffer_in);
-				free(buffer_out);
+                // free memory
+                free(buffer_in);
+                free(buffer_out);
 
-				// sleep for wait period
-				sleep(sleep_time);
-			}
+                // sleep for wait period
+                sleep(sleep_time);
+            }
 
-			else
-			{
-				// report that job file is empty
-				if (verbose)
-					printf("Job file is empty: Rank %04d exiting\n", rank);
+            else
+            {
+                // report that job file is empty
+                if (verbose)
+                    printf("Job file is empty: Rank %04d exiting\n", rank);
 
-				// attempt to unlock file
-				unlock_file(&fl, fd);
+                // attempt to unlock file
+                unlock_file(&fl, fd);
 
-				// close file descriptor
-				close(fd);
+                // close file descriptor
+                close(fd);
 
-				// free memory
-				free(buffer_in);
-				free(buffer_out);
+                // free memory
+                free(buffer_in);
+                free(buffer_out);
 
-				// clean up and exit
-				MPI_Finalize();
-				exit(0);
-			}
-		}
-	}
+                // clean up and exit
+                MPI_Finalize();
+                exit(0);
+            }
+        }
+    }
 
-	return 0;
+    return 0;
 }
 // END MAIN FUNCTION
 
@@ -303,109 +303,109 @@ int main(int argc, char **argv)
      int *sleep_time           pointer to sleep duration variable
 */
 void parse_command_line_arguments(int argc, char **argv, int rank,
-		char *job_file, bool *verbose, bool *wait_on_idle, int *sleep_time)
+        char *job_file, bool *verbose, bool *wait_on_idle, int *sleep_time)
 {
-	int i = 1;
-	bool file;
+    int i = 1;
+    bool file;
 
-	if (argc < 2)
-	{
-		if (rank == 0)
-		{
-			print_help_message();
-		}
+    if (argc < 2)
+    {
+        if (rank == 0)
+        {
+            print_help_message();
+        }
 
-		MPI_Finalize();
-		exit(0);
-	}
+        MPI_Finalize();
+        exit(0);
+    }
 
-	else
-	{
-		if (argc == 2)
-		{
-			if (strcmp(argv[1],"-h") == 0 || strcmp(argv[1],"--help") == 0)
-			{
-				if (rank == 0)
-				{
-					print_help_message();
-				}
+    else
+    {
+        if (argc == 2)
+        {
+            if (strcmp(argv[1],"-h") == 0 || strcmp(argv[1],"--help") == 0)
+            {
+                if (rank == 0)
+                {
+                    print_help_message();
+                }
 
-				MPI_Finalize();
-				exit(0);
-			}
-		}
+                MPI_Finalize();
+                exit(0);
+            }
+        }
 
-		else
-		{
-			while (i < argc)
-			{
-				if (strcmp(argv[i],"-f") == 0 || strcmp(argv[i],"--file") == 0)
-				{
-					i++;
-					file = true;
-					strcpy(job_file, argv[i]);
-				}
+        else
+        {
+            while (i < argc)
+            {
+                if (strcmp(argv[i],"-f") == 0 || strcmp(argv[i],"--file") == 0)
+                {
+                    i++;
+                    file = true;
+                    strcpy(job_file, argv[i]);
+                }
 
-				else if (strcmp(argv[i],"-v") == 0 || strcmp(argv[i],"--verbose") == 0)
-				{
-					*verbose = true;
-				}
+                else if (strcmp(argv[i],"-v") == 0 || strcmp(argv[i],"--verbose") == 0)
+                {
+                    *verbose = true;
+                }
 
-				else if (strcmp(argv[i],"-w") == 0 || strcmp(argv[i],"--wait_on_idle") == 0)
-				{
-					*wait_on_idle = true;
-				}
+                else if (strcmp(argv[i],"-w") == 0 || strcmp(argv[i],"--wait_on_idle") == 0)
+                {
+                    *wait_on_idle = true;
+                }
 
-				else if (strcmp(argv[i],"-s") == 0 || strcmp(argv[i],"--sleep_time") == 0)
-				{
-					i++;
-					*sleep_time = atof(argv[i]);
-				}
+                else if (strcmp(argv[i],"-s") == 0 || strcmp(argv[i],"--sleep_time") == 0)
+                {
+                    i++;
+                    *sleep_time = atof(argv[i]);
+                }
 
-				else if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i],"--help") == 0) {}
+                else if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i],"--help") == 0) {}
 
-				else
-				{
-					if (rank == 0)
-					{
-						fprintf(stderr, "[ERROR]: Unknown command-line option %s\n", argv[i]);
-						fprintf(stderr, "For help run \"taskfarmer -h\"\n");
-					}
+                else
+                {
+                    if (rank == 0)
+                    {
+                        fprintf(stderr, "[ERROR]: Unknown command-line option %s\n", argv[i]);
+                        fprintf(stderr, "For help run \"taskfarmer -h\"\n");
+                    }
 
-					MPI_Finalize();
-					exit(1);
-				}
+                    MPI_Finalize();
+                    exit(1);
+                }
 
-				i++;
-			}
-		}
-	}
+                i++;
+            }
+        }
+    }
 
-	if (!file)
-	{
-		if (rank == 0)
-		{
-			fprintf(stderr, "[ERROR]: A job file must be specified with \"-f/--file\"\n");
-			fprintf(stderr, "For help run \"taskfarmer -h\"\n");
-		}
+    if (!file)
+    {
+        if (rank == 0)
+        {
+            fprintf(stderr, "[ERROR]: A job file must be specified with \"-f/--file\"\n");
+            fprintf(stderr, "For help run \"taskfarmer -h\"\n");
+        }
 
-		MPI_Finalize();
-		exit(1);
-	}
+        MPI_Finalize();
+        exit(1);
+    }
 }
 
 // Print help message to stdout
 void print_help_message()
 {
-	puts("TaskFarmer - a simple task farmer for running serial jobs with mpirun.\n\n"
-	     "Usage: mpirun -np CORES taskfarmer [-h] -f FILE [-v] [-w] [-s SLEEP_TIME]\n\n"
+    puts("TaskFarmer - a simple task farmer for running serial jobs with mpirun.\n\n"
+         "Usage: mpirun -np CORES taskfarmer [-h] -f FILE [-v] [-w] [-s SLEEP_TIME]\n\n"
 
-	     "Available options:\n"
-	     " -h/--help                 : Print this help information\n"
-	     " -f/--file <string>        : Location of job file (required)\n"
-	     " -v/--verbose              : Print status updates to stdout\n"
-	     " -w/--wait-on-idle         : Wait for more jobs when idle\n"
-	     " -s/--sleep-time <int>     : Sleep duration when idle (seconds)\n");
+         "Available options:\n"
+         " -h/--help                 : Print this help information\n"
+         " -f/--file <string>        : Location of job file (required)\n"
+         " -v/--verbose              : Print status updates to stdout\n"
+         " -w/--wait-on-idle         : Wait for more jobs when idle\n"
+         " -s/--sleep-time <int>     : Sleep duration when idle (seconds)\n");
 }
 
 /* Attempt to acquire a file lock
@@ -417,16 +417,16 @@ void print_help_message()
 */
 void lock_file(struct flock *fl, int fd)
 {
-	// set to write/exclusive lock
-	fl->l_type = F_WRLCK;
+    // set to write/exclusive lock
+    fl->l_type = F_WRLCK;
 
-	// try to lock file
-	if (fcntl(fd, F_SETLKW, fl) == -1)
-	{
-		perror("[ERROR] fcntl");
-		MPI_Finalize();
-		exit(1);
-	}
+    // try to lock file
+    if (fcntl(fd, F_SETLKW, fl) == -1)
+    {
+        perror("[ERROR] fcntl");
+        MPI_Finalize();
+        exit(1);
+    }
 }
 
 /* Attempt to release a file lock
@@ -438,14 +438,15 @@ void lock_file(struct flock *fl, int fd)
 */
 void unlock_file(struct flock *fl, int fd)
 {
-	// set to unlocked
-	fl->l_type = F_UNLCK;
 
-	// try to unlock file
-	if (fcntl(fd, F_SETLK, fl) == -1)
-	{
-		perror("[ERROR] fcntl");
-		MPI_Finalize();
-		exit(1);
-	}
+    // set to unlocked
+    fl->l_type = F_UNLCK;
+
+    // try to unlock file
+    if (fcntl(fd, F_SETLK, fl) == -1)
+    {
+        perror("[ERROR] fcntl");
+        MPI_Finalize();
+        exit(1);
+    }
 }
