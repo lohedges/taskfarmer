@@ -116,19 +116,19 @@ rank = MPI.COMM_WORLD.Get_rank()
 
 # create argument parser object
 parser = argparse.ArgumentParser(description=
-        'A simple Python task farmer for running serial jobs with mpirun.')
+    'A simple Python task farmer for running serial jobs with mpirun.')
 
 # parse command-line options
 parser.add_argument('-f','--file', type=str,
-        help='location of job file', required=True)
+    help='location of job file', required=True)
 parser.add_argument('-v','--verbose', action='store_true',
-        help='enable verbose mode', default=False)
+    help='enable verbose mode', default=False)
 parser.add_argument('-w','--wait-on-idle', action='store_true',
-        help='wait for more jobs when idle', default=False)
+    help='wait for more jobs when idle', default=False)
 parser.add_argument('-s','--sleep-time', type=int,
-        help='sleep duration when idle (seconds)', default=300)
+    help='sleep duration when idle (seconds)', default=300)
 parser.add_argument('-d','--disallowed', nargs='*',
-        help='disallowed commands', default=['rm'])
+    help='disallowed commands', default=['rm'])
 args = parser.parse_args()
 
 # check if command is valid
