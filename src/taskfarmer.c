@@ -438,7 +438,6 @@ void lock_file(struct flock *fl, int fd)
 */
 void unlock_file(struct flock *fl, int fd)
 {
-
     // set to unlocked
     fl->l_type = F_UNLCK;
 
