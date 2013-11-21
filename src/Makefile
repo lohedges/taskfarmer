@@ -9,7 +9,7 @@ include ../config.mk
 
 all: taskfarmer
 
-rectify:
+taskfarmer:
 	$(CC) taskfarmer.c -o taskfarmer
 
 clean:
