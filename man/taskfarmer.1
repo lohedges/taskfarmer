@@ -31,7 +31,9 @@ TaskFarmer \- a simple task farmer for serial mpirun jobs.
 .OP \-h
 .OP \-v
 .OP \-w
+.OP \-r
 .OP \-s SLEEP_TIME
+.OP \-s MAX_RETRIES
 .SH DESCRIPTION
 .PP
 Execute a list of system commands from a job file one-by-one. This allows
@@ -81,8 +83,14 @@ Activate verbose mode (status updates are written to stdout).
 .BI \-w " " "\fR,\fP \-\^\-wait-on-idle
 TaskFarmer waits for more jobs when idle.
 .TP
+.BI \-r " " "\fR,\fP \-\^\--retry
+TaskFarmer retries failed jobs.
+.TP
 .BI \-s " SLEEP_TIME" "\fR,\fP \-\^\-sleep-time "SLEEP_TIME
 Sleep duration when idle (seconds).
+.TP
+.BI \-m " MAX_RETRIES" "\fR,\fP \-\^\-max-retries "MAX_RETRIES
+Maximum number of times to retry a failed job.
 .SH USAGE
 It is possible to change the state of idle cores using the
 .B --wait-on-idle
@@ -95,6 +103,15 @@ option, the default is 300 seconds. This cycle will continue until the wall
 time is reached. By default
 .B wait-on-idle
 is deactivated meaning that each process exits when the job file is empty.
+.P
+The
+.B --retry
+and
+.B --max-retries
+options allow
+.B TaskFarmer
+to relaunch any failed jobs up to a maximum number of attempts. The default
+number of retries is 10.
 .SH TIPS
 System commands in the job file should redirect their standard output
 to a separate log file to avoid littering the standard output of
@@ -133,6 +150,13 @@ OMPI_MCA_mpi_warn_on_fork=0
 .IP
 .B export
 OMPI_MCA_btl_openib_want_fork_support=0
+.IP \[bu]
+At present, when the
+.B --retry
+option is set, failed jobs are only relaunched by the same process on which they
+failed. This is fine when job failures are caused by buggy or unstable code,
+but is unlikely to help when failure results from a bad core or node on a
+cluster.
 .IP \[bu]
 For clusters that don't impose a wall time,
 .B

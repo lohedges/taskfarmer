@@ -54,7 +54,7 @@ $ sudo make uninstall
 
 ## Usage
 ``` bash
-$ mpirun -np CORES taskfarmer [-h] -f FILE [-v] [-w] [-s SLEEP_TIME]
+$ mpirun -np CORES taskfarmer [-h] -f FILE [-v] [-w] [-r] [-s SLEEP_TIME] [-m MAX_RETRIES]
 ```
 
 TaskFarmer supports the following short- and long-form command-line
@@ -64,8 +64,11 @@ options:
 	-f FILE, --file FILE    location of job file (required)
 	-v, --verbose           enable verbose mode (status updates to stdout)
 	-w, --wait-on-idle      wait for more jobs when idle
+	-r, --retry             retry failed jobs
 	-s SLEEP_TIME, --sleep-time SLEEP_TIME
 	                        sleep duration when idle (seconds)
+	-m MAX_RETRIES, --max-retries MAX_RETRIES
+	                        maximum number of times to retry failed jobs
 
 It is possible to change the state of idle cores using the `--wait-on-idle`
 option. When set, a core will sleep for a specified period of time if it
@@ -75,6 +78,9 @@ that a process sleeps for can be changed with the `--sleep-time` option, the
 default is 300 seconds. This cycle will continue until the wall time is
 reached. By default `wait-on-idle` is deavtivated meaning that each process
 exits when the job file is empty.
+
+The `--retry` and `--max-retries` options allow TaskFarmer to retry failed
+jobs up to a maximum number of attempts. The default number of retries is 10.
 
 ## Examples
 Try the following:
@@ -116,6 +122,10 @@ A collection of example PBS batch scripts are included in the `examples/` direct
 $ export OMPI_MCA_mpi_warn_on_fork=0
 $ export OMPI_MCA_btl_openib_want_fork_support=0
 ```
+* At present, when the `--retry` option is set, failed jobs are only relaunched
+  by the same process on which they failed. This is fine when job failures are
+  caused by buggy or unstable code, but is unlikely to help when failure results
+  from a bad core or node on a cluster.
 
 * For clusters that don't impose a wall time, TaskFarmer provides a way of
   running an infinite number of jobs. As long as the job file isn't empty jobs

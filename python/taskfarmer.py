@@ -43,8 +43,8 @@ The order of operations is as follows:
 
 Usage:
 
-    mpirun -np CORES taskfarmer.py [-h] -f FILE [-v] [-w] [-s SLEEP_TIME]
-                        [-d [DISALLOWED [DISALLOWED ...]]]
+    mpirun -np CORES taskfarmer.py [-h] -f FILE [-v] [-w] [-r]
+        [-s SLEEP_TIME] [-m MAX_RETRIES] [-d [DISALLOWED [DISALLOWED ...]]]
 
 PyTaskFarmer supports the following short- and long-form command-line
 options.
@@ -53,8 +53,11 @@ options.
     -f FILE, --file FILE    location of job file (required)
     -v, --verbose           enable verbose mode (status updates to stdout)
     -w, --wait-on-idle      wait for more jobs when idle
+    -r, --retry             retry failed jobs
     -s SLEEP_TIME, --sleep-time SLEEP_TIME
                             sleep duration when idle (seconds)
+    -m MAX_RETRIES, --max-retries MAX_RETRIES
+                            maximum number of times to retry failed jobs
     -d [DISALLOWED [DISALLOWED ...]], --disallowed [DISALLOWED [DISALLOWED ...]]
                             list of disallowed commands
 
@@ -70,6 +73,9 @@ that a process sleeps for can be changed with the "sleep-time" option, the
 default is 300 seconds. This cycle will continue until the wall time is
 reached. By default "wait-on-idle" is set to "False" meaning that each process
 calls "sys.exit()" when the job file is empty.
+
+The "--retry" and "--max-retries" options allow TaskFarmer to retry failed
+jobs up to a maximum number of attempts. The default number of retries is 10.
 
 As an example, try running the following:
 
@@ -98,6 +104,11 @@ Words of caution:
       recommended to modify the job file using a redirection, rather than
       opening it and editing directly, e.g. cat more_jobs >> jobs.txt.
 
+    - At present, when the "--retry" option is set, failed jobs are only
+      relaunched by the same process on which they failed. This is fine when
+      job failures are caused by buggy or unstable code, but is unlikely to
+      help when failure results from a bad core or node on a cluster.
+
     - For clusters that don't impose a wall time, PyTaskFarmer provides a way
       of running an infinite number of jobs. As long as the job file isn't
       empty jobs will continue to be launched on free cores within the
@@ -114,6 +125,14 @@ from fcntl import flock, LOCK_EX, LOCK_UN
 # process rank
 rank = MPI.COMM_WORLD.Get_rank()
 
+# validate positive, non-zero arguments
+class validate_argument(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values <= 0:
+            parser.error("{0} must be greater than zero.".format(option_string))
+
+        setattr(namespace, self.dest, values)
+
 # create argument parser object
 parser = argparse.ArgumentParser(description=
     'A simple Python task farmer for running serial jobs with mpirun.')
@@ -125,11 +144,19 @@ parser.add_argument('-v','--verbose', action='store_true',
     help='enable verbose mode', default=False)
 parser.add_argument('-w','--wait-on-idle', action='store_true',
     help='wait for more jobs when idle', default=False)
-parser.add_argument('-s','--sleep-time', type=int,
+parser.add_argument('-r','--retry', action='store_true',
+    help='retry failed jobs', default=False)
+parser.add_argument('-s','--sleep-time', action=validate_argument, type=int,
     help='sleep duration when idle (seconds)', default=300)
+parser.add_argument('-m','--max-retries', action=validate_argument, type=int,
+    help='maximum times to retry failed jobs', default=10)
 parser.add_argument('-d','--disallowed', nargs='*',
     help='disallowed commands', default=['rm'])
 args = parser.parse_args()
+
+# only attempt to launch jobs once if retry option is unset
+if not args.retry:
+    max_retries = 1
 
 # check if command is valid
 def is_allowed(job):
@@ -193,14 +220,24 @@ while True:
         flock(f, LOCK_UN)
         f.close()
 
+        # zero attempts
+        attempts = 0
+
         # check that job is allowed
         allowed, error = is_allowed(job)
         if allowed:
             if args.verbose:
                 print "Rank %04d" %rank, "launching:", job
-            # execute job
-            if os.system(job) != 0:
-                print >> sys.stderr, "Warning: system command failed,", job
+
+            # attempt to execute job
+            while attempts < args.max_retries and os.system(job) != 0:
+                attempts += 1
+                if args.verbose:
+                    if args.retry:
+                        print >> sys.stderr, "Warning: system command failed,", \
+                            job, "(%d/%d)" % (attempts, args.max_retries)
+                    else:
+                        print >> sys.stderr, "Warning: system command failed,", job
         else:
             print >> sys.stderr, "Warning:", error
 
