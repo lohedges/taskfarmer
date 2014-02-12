@@ -486,7 +486,7 @@ void print_help_message()
          " -w/--wait-on-idle         : Wait for more jobs when idle\n"
          " -r/--retry                : Retry failed jobs\n"
          " -s/--sleep-time <int>     : Sleep duration when idle (seconds)\n"
-         " -s/--max-retries <int>    : Maximum number of retries for failed jobs\n");
+         " -m/--max-retries <int>    : Maximum number of retries for failed jobs\n");
 }
 
 /* Attempt to acquire a file lock
