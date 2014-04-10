@@ -106,6 +106,16 @@ A collection of example PBS batch scripts are included in the `examples/` direct
 	$ mpirun -np 4 taskfarmer -f jobs.txt > sched.log
 	```
 
+* The `wc` command-line utility is handy for checking the number of remaining
+  jobs in a job file without the need to trawl through any of TaskFarmer's
+  logs. For example, if job files are stored in a directory called `job_files`
+  then the following command will provide a concise output showing the number of
+  remaining jobs in each file as well as the total.
+
+	``` bash
+	$ wc -l job_files/*
+	```
+
 ## Words of caution
 
 * When individual simulations are very short it is probably dangerous to
@@ -126,6 +136,11 @@ $ export OMPI_MCA_btl_openib_want_fork_support=0
   by the same process on which they failed. This is fine when job failures are
   caused by buggy or unstable code, but is unlikely to help when failure results
   from a bad core or node on a cluster.
+
+* Very large job files containing complex shell commands can be problematic since
+  each process needs to be able to load the file to memory. This problem can be
+  mitigated through judicious choice of command names (e.g. using short form
+  options) and use of relative paths where possible.
 
 * For clusters that don't impose a wall time, TaskFarmer provides a way of
   running an infinite number of jobs. As long as the job file isn't empty jobs
