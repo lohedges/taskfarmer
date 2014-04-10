@@ -74,7 +74,7 @@ default is 300 seconds. This cycle will continue until the wall time is
 reached. By default "wait-on-idle" is set to "False" meaning that each process
 calls "sys.exit()" when the job file is empty.
 
-The "--retry" and "--max-retries" options allow TaskFarmer to retry failed
+The "--retry" and "--max-retries" options allow PyTaskFarmer to retry failed
 jobs up to a maximum number of attempts. The default number of retries is 10.
 
 As an example, try running the following:
@@ -95,6 +95,14 @@ Tips:
 
             mpirun -np 4 taskfarmer.py -f jobs.txt > sched.log
 
+    - The wc command-line utility is handy for checking the number of remaining
+      jobs in a job file without the need to trawl through any of PyTaskFarmer's
+      logs. For example, if job files are stored in a directory called job_files
+      then the following command will provide a concise output showing the number of
+      remaining jobs in each file as well as the total.
+
+            wc -l job_files/*
+
 Words of caution:
 
     - When individual simulations are very short it is probably dangerous
@@ -108,6 +116,11 @@ Words of caution:
       relaunched by the same process on which they failed. This is fine when
       job failures are caused by buggy or unstable code, but is unlikely to
       help when failure results from a bad core or node on a cluster.
+
+    - Very large job files containing complex shell commands can be problematic
+      since each process needs to be able to load the file to memory. This
+      problem can be mitigated through judicious choice of command names
+      (e.g. using short form options) and use of relative paths where possible.
 
     - For clusters that don't impose a wall time, PyTaskFarmer provides a way
       of running an infinite number of jobs. As long as the job file isn't

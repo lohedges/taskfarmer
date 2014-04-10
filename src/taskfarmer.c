@@ -96,7 +96,7 @@
      then the following command will provide a concise output showing the number of
      remaining jobs in each file as well as the total.
 
-	  wc -l job_files/*
+      wc -l job_files/*
 
   Words of caution:
 
