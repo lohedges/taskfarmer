@@ -142,7 +142,12 @@ remaining jobs in each file as well as the total.
 .IP
 .B wc -l
 job_files/*
-
+.PP
+Since jobs are read from the job file line-by-line it is possible to
+introduce dependencies between jobs by placing multiple jobs on a single
+line separated by semicolons. For example
+.IP
+perform_calculation > data.txt; analyze_data < data.txt
 .SH WORDS OF CAUTION
 .IP \[bu]
 When individual simulations are very short it is probably dangerous to

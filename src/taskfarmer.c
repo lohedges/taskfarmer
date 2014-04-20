@@ -98,6 +98,12 @@
 
       wc -l job_files/*
 
+   - Since jobs are read from the job file line-by-line it is possible to
+     introduce dependencies between jobs by placing multiple jobs on a single
+     line separated by semicolons. For example
+
+       perform_calculation > data.txt; analyze_data < data.txt
+
   Words of caution:
 
    - When individual simulations are very short it is probably dangerous
