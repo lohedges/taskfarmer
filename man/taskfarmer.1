@@ -15,7 +15,7 @@
 .Id $Id: taskfarmer.1,v 1.00 2013/07/11 12:25:32 lester Exp $
 .TH TASKFARMER 1 \*(Dt "Lester Hedges"
 .SH NAME
-TaskFarmer \- a simple task farmer for serial mpirun jobs.
+TaskFarmer \- a simple task farmer for serial mpirun tasks.
 .SH SYNOPSIS
 .B mpirun
 -np
@@ -36,32 +36,32 @@ TaskFarmer \- a simple task farmer for serial mpirun jobs.
 .OP \-m MAX_RETRIES
 .SH DESCRIPTION
 .PP
-Execute a list of system commands from a job file one-by-one. This allows
-many simulations to be run within a single mpirun allocation. A new job is
+Execute a list of system commands from a task file one-by-one. This allows
+many simulations to be run within a single mpirun allocation. A new task is
 launched whenever a process becomes available, hence ensuring 100% utilization
-of the cores for the duration of the wall time, or until the job file is
+of the cores for the duration of the wall time, or until the task file is
 empty, whichever occurs first. This is useful for running many short
 simulations on a small number of cores, or to avoid resource wastage when
-individual simulations have markedly different run times. The job file can
+individual simulations have markedly different run times. The task file can
 be updated dynamically, allowing simulations to be added or deleted as
 required.
 .PP
 A master-worker type scenario is avoided by exploiting a file lock. This
-ensures that only one process has access to the job file at any given time.
+ensures that only one process has access to the task file at any given time.
 .PP
 The order of operations is as follows:
 .IP \[bu]
-A process opens the job file and obtains an exclusive lock.
+A process opens the task file and obtains an exclusive lock.
 .IP \[bu]
-All jobs are read into a buffer.
+All tasks are read into a buffer.
 .IP \[bu]
-First job is read and buffer is truncated.
+First task is read and buffer is truncated.
 .IP \[bu]
 Truncated buffer is written back to the file.
 .IP \[bu]
 File is unlocked and closed (other processes can now access it).
 .IP \[bu]
-Job is launched.
+task is launched.
 .SH OPTIONS
 .B
 TaskFarmer
@@ -75,34 +75,34 @@ Print the help message.
 .BI \-f " FILE" "\fR,\fP \-\^\-file "FILE
 Where
 .I FILE
-is the path to the job file (required).
+is the path to the task file (required).
 .TP
 .BI \-v " " "\fR,\fP \-\^\-verbose
 Activate verbose mode (status updates are written to stdout).
 .TP
 .BI \-w " " "\fR,\fP \-\^\-wait-on-idle
-TaskFarmer waits for more jobs when idle.
+TaskFarmer waits for more tasks when idle.
 .TP
 .BI \-r " " "\fR,\fP \-\^\--retry
-TaskFarmer retries failed jobs.
+TaskFarmer retries failed tasks.
 .TP
 .BI \-s " SLEEP_TIME" "\fR,\fP \-\^\-sleep-time "SLEEP_TIME
 Sleep duration when idle (seconds).
 .TP
 .BI \-m " MAX_RETRIES" "\fR,\fP \-\^\-max-retries "MAX_RETRIES
-Maximum number of times to retry a failed job.
+Maximum number of times to retry a failed task.
 .SH USAGE
 It is possible to change the state of idle cores using the
 .B --wait-on-idle
 option. When set, a core will sleep for a specified period of time if it
-cannot find a job to execute. After the waiting period the process will
-check whether more jobs have been added to the job file. The amount of time
+cannot find a task to execute. After the waiting period the process will
+check whether more tasks have been added to the task file. The amount of time
 that a process sleeps for can be changed with the
 .B --sleep-time
 option, the default is 300 seconds. This cycle will continue until the wall
 time is reached. By default
 .B wait-on-idle
-is deactivated meaning that each process exits when the job file is empty.
+is deactivated meaning that each process exits when the task file is empty.
 .P
 The
 .B --retry
@@ -110,16 +110,16 @@ and
 .B --max-retries
 options allow
 .B TaskFarmer
-to relaunch any failed jobs up to a maximum number of attempts. The default
+to relaunch any failed tasks up to a maximum number of attempts. The default
 number of retries is 10.
 .SH TIPS
-System commands in the job file should redirect their standard output
+System commands in the task file should redirect their standard output
 to a separate log file to avoid littering the standard output of
 .B TaskFarmer
-itself. As an example, the job file could contain a command like
+itself. As an example, the task file could contain a command like
 .IP
 .B echo
-"Hello, I'm a job" > job.log
+"Hello, I'm a task" > job.log
 .PP
 with
 .B TaskFarmer
@@ -128,37 +128,37 @@ launched as follows
 .B mpirun
 -np 4 \fBtaskfarmer
 .B -f
-jobs.txt > sched.log
+tasks.txt > sched.log
 .PP
 The
 .B wc
 command-line utility is handy for checking the number of remaining
-jobs in a job file without the need to trawl through any of
+tasks in a task file without the need to trawl through any of
 .B TaskFarmer's
-logs. For example, if job files are stored in a directory called
-.B job_files
+logs. For example, if task files are stored in a directory called
+.B task_files
 then the following command will provide a concise output showing the number of
-remaining jobs in each file as well as the total.
+remaining tasks in each file as well as the total.
 .IP
 .B wc -l
-job_files/*
+task_files/*
 .PP
-Since jobs are read from the job file line-by-line it is possible to
-introduce dependencies between jobs by placing multiple jobs on a single
+Since tasks are read from the task file line-by-line it is possible to
+introduce dependencies between tasks by placing multiple tasks on a single
 line separated by semicolons. For example
 .IP
 perform_calculation > data.txt; analyze_data < data.txt
 .SH WORDS OF CAUTION
 .IP \[bu]
 When individual simulations are very short it is probably dangerous to
-modify the job file externally as it will likely conflict with TaskFarmer's
-I/O. The file should only be modified when all cores are active (running jobs)
-or in an idle state (job file is emtpy). It is recommended to modify the job
+modify the task file externally as it will likely conflict with TaskFarmer's
+I/O. The file should only be modified when all cores are active (running tasks)
+or in an idle state (task file is emtpy). It is recommended to modify the task
 file using a redirection, rather than opening it and editing directly,
 e.g.
 .B
 cat
-more_jobs >> jobs.txt
+more_tasks >> tasks.txt
 .IP \[bu]
 Clusters that use InfiniBand interconnects can cause problems when using fork()
 in OpenMPI. A workaround can be achieved by disabling InfiniBand support for
@@ -172,12 +172,12 @@ OMPI_MCA_btl_openib_want_fork_support=0
 .IP \[bu]
 At present, when the
 .B --retry
-option is set, failed jobs are only relaunched by the same process on which they
-failed. This is fine when job failures are caused by buggy or unstable code,
+option is set, failed tasks are only relaunched by the same process on which they
+failed. This is fine when task failures are caused by buggy or unstable code,
 but is unlikely to help when failure results from a bad core or node on a
 cluster.
 .IP \[bu]
-Very large job files containing complex shell commands can be problematic
+Very large task files containing complex shell commands can be problematic
 since each process needs to be able to load the file to memory. This
 problem can be mitigated through judicious choice of command names
 (e.g. using short form options) and use of relative paths where possible.
@@ -185,8 +185,8 @@ problem can be mitigated through judicious choice of command names
 For clusters that don't impose a wall time,
 .B
 TaskFarmer
-provides a way of running an infinite number of jobs. As long as the job
-file isn't empty jobs will continue to be launched on free cores within the
+provides a way of running an infinite number of tasks. As long as the task
+file isn't empty tasks will continue to be launched on free cores within the
 allocation. Use your new power wisely!
 .SH BUGS
 .PP

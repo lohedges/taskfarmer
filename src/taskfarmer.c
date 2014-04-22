@@ -16,32 +16,32 @@
 */
 
 /*
-  TaskFarmer: A simple task farmer for running serial jobs with mpirun.
+  TaskFarmer: A simple task farmer for running serial tasks with mpirun.
   Run "taskfarmer -h" for help.
 
   About:
 
-  Execute a list of system commands from a job file one-by-one. This allows
-  many simulations to be run within a single mpirun allocation. A new job is
+  Execute a list of system commands from a task file one-by-one. This allows
+  many simulations to be run within a single mpirun allocation. A new task is
   launched whenever a process becomes available, hence ensuring 100% utilization
-  of the cores for the duration of the wall time, or until the job file is
+  of the cores for the duration of the wall time, or until the task file is
   empty, whichever occurs first. This is useful for running many short
   simulations on a small number of cores, or to avoid resource wastage when
-  individual simulations have markedly different run times. The job file can
+  individual simulations have markedly different run times. The task file can
   be updated dynamically, allowing simulations to be added or deleted as
   required.
 
   A master-worker type scenario is avoided by exploiting a file lock. This
-  ensures that only one process has access to the job file at any given time.
+  ensures that only one process has access to the task file at any given time.
 
   The order of operations is as follows:
 
-   - A process opens the job file and obtains an exclusive lock.
-   - All jobs are read into a buffer.
-   - First job is read and buffer is truncated.
+   - A process opens the task file and obtains an exclusive lock.
+   - All tasks are read into a buffer.
+   - First task is read and buffer is truncated.
    - Truncated buffer is written back to the file.
    - File is unlocked and closed (other processes can now access it).
-   - Job is launched.
+   - Task is launched.
 
   Usage:
 
@@ -51,55 +51,55 @@
   options.
 
    -h/--help                show help message and exit
-   -f FILE, --file FILE     location of job file (required)
+   -f FILE, --file FILE     location of task file (required)
    -v, --verbose            enable verbose mode (status updates to stdout)
-   -w, --wait-on-idle       wait for more jobs when idle
-   -r, --retry              retry failed jobs
+   -w, --wait-on-idle       wait for more tasks when idle
+   -r, --retry              retry failed tasks
    -s SLEEP_TIME, --sleep-time SLEEP_TIME
                             sleep duration when idle (seconds)
    -m MAX_RETRIES, --max-retries MAX_RETRIES
-                            maximum number of times to retry failed jobs
+                            maximum number of times to retry failed tasks
 
   It is possible to change the state of idle cores using the "--wait-on-idle"
   option. When set, a core will sleep for a specified period of time if it
-  cannot find a job to execute. After the waiting period the process will
-  check whether more jobs have been added to the job file. The amount of time
+  cannot find a task to execute. After the waiting period the process will
+  check whether more tasks have been added to the task file. The amount of time
   that a process sleeps for can be changed with the "--sleep-time" option, the
   default is 300 seconds. This cycle will continue until the wall time is
   reached. By default "wait-on-idle" is deactivated meaning that each process
-  exits when the job file is empty.
+  exits when the task file is empty.
 
   The "--retry" and "--max-retries" options allow TaskFarmer to retry failed
-  jobs up to a maximum number of attempts. The default number of retries is 10.
+  tasks up to a maximum number of attempts. The default number of retries is 10.
 
   As an example, try running the following
 
-   shuf tests/commands.txt | head -n 100 > jobs.txt
-            | mpirun -np 4 src/taskfarmer -f jobs.txt
+   shuf tests/commands.txt | head -n 100 > tasks.txt
+            | mpirun -np 4 src/taskfarmer -f tasks.txt
 
   Tips:
 
-   - System commands in the job file should redirect their standard output
+   - System commands in the task file should redirect their standard output
      to a separate log file to avoid littering the standard output of
-     TaskFarmer itself. As an example, the jobs.txt file could contain
+     TaskFarmer itself. As an example, the tasks.txt file could contain
      a command like
 
-      echo "Hello, I'm a job" > job.log
+      echo "Hello, I'm a task" > job.log
 
      with TaskFarmer launched as follows
 
-      mpirun -np 4 taskfarmer -f jobs.txt > sched.log
+      mpirun -np 4 taskfarmer -f tasks.txt > sched.log
 
    - The wc command-line utility is handy for checking the number of remaining
-     jobs in a job file without the need to trawl through any of TaskFarmer's
-     logs. For example, if job files are stored in a directory called job_files
+     tasks in a task file without the need to trawl through any of TaskFarmer's
+     logs. For example, if task files are stored in a directory called task_files
      then the following command will provide a concise output showing the number of
-     remaining jobs in each file as well as the total.
+     remaining tasks in each file as well as the total.
 
-      wc -l job_files/*
+      wc -l task_files/*
 
-   - Since jobs are read from the job file line-by-line it is possible to
-     introduce dependencies between jobs by placing multiple jobs on a single
+   - Since tasks are read from the task file line-by-line it is possible to
+     introduce dependencies between tasks by placing multiple tasks on a single
      line separated by semicolons. For example
 
        perform_calculation > data.txt; analyze_data < data.txt
@@ -107,11 +107,11 @@
   Words of caution:
 
    - When individual simulations are very short it is probably dangerous
-     to modify the job file externally as it will likely conflict with
+     to modify the task file externally as it will likely conflict with
      TaskFarmer's I/O. The file should only be modified when all cores are
-     active (running jobs) or in an idle state (job file is emtpy). It is
-     recommended to modify the job file using a redirection, rather than
-     opening it and editing directly, e.g. cat more_jobs >> jobs.txt.
+     active (running tasks) or in an idle state (task file is emtpy). It is
+     recommended to modify the task file using a redirection, rather than
+     opening it and editing directly, e.g. cat more_task >> tasks.txt.
 
    - Clusters that use InfiniBand interconnects can cause problems when
      using fork() in OpenMPI. A workaround can be achieved by disabling
@@ -121,19 +121,19 @@
         export OMPI_MCA_mpi_warn_on_fork=0
         export OMPI_MCA_btl_openib_want_fork_support=0
 
-   - At present, when the "--retry" option is set, failed jobs are only
+   - At present, when the "--retry" option is set, failed tasks are only
      relaunched by the same process on which they failed. This is fine when
-     job failures are caused by buggy or unstable code, but is unlikely to
+     task failures are caused by buggy or unstable code, but is unlikely to
      help when failure results from a bad core or node on a cluster.
 
-   - Very large job files containing complex shell commands can be problematic
+   - Very large task files containing complex shell commands can be problematic
      since each process needs to be able to load the file to memory. This
      problem can be mitigated through judicious choice of command names
      (e.g. using short form options) and use of relative paths where possible.
 
    - For clusters that don't impose a wall time, TaskFarmer provides a way
-     of running an infinite number of jobs. As long as the job file isn't
-     empty jobs will continue to be launched on free cores within the
+     of running an infinite number of tasks. As long as the task file isn't
+     empty task will continue to be launched on free cores within the
      allocation. Use your new power wisely!
 */
 
@@ -166,7 +166,7 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &size);   // get number of processes
 
     // set default parameters
-    char job_file[1024];
+    char task_file[1024];
     bool verbose = false;
     bool wait_on_idle = false;
     int sleep_time = 300;
@@ -182,7 +182,7 @@ int main(int argc, char **argv)
     struct stat file_stats;
 
     // parse all command-line arguments
-    parse_command_line_arguments(argc, argv, rank, job_file,
+    parse_command_line_arguments(argc, argv, rank, task_file,
         &verbose, &wait_on_idle, &retry, &sleep_time, &max_retries);
 
     // initialize file lock structure
@@ -201,8 +201,8 @@ int main(int argc, char **argv)
     // loop indefinitely
     while (true)
     {
-        // try to open the job file
-        if ((fd = open(job_file, O_RDWR)) == -1)
+        // try to open the task file
+        if ((fd = open(task_file, O_RDWR)) == -1)
         {
             perror("[ERROR] open");
             MPI_Finalize();
@@ -224,13 +224,13 @@ int main(int argc, char **argv)
         buffer_in = malloc(file_stats.st_size);
         buffer_out = malloc(file_stats.st_size);
 
-        // read job file into buffer
+        // read task file into buffer
         num_read = read(fd, buffer_in, file_stats.st_size);
 
-        // check that there are jobs to process
+        // check that there are tasks to process
         if (num_read > 0)
         {
-            // read first job
+            // read first task
             for (i=0;i<num_read;i++)
             {
                 // found newline
@@ -240,11 +240,11 @@ int main(int argc, char **argv)
             // allocate memory for system command
             system_command = malloc((i+1)*sizeof(char));
 
-            // copy job into system command buffer and terminate
+            // copy task into system command buffer and terminate
             strncpy(system_command, buffer_in, i);
             system_command[i] = '\0';
 
-            // copy remaining jobs into output buffer and terminate
+            // copy remaining tasks into output buffer and terminate
             strcpy(buffer_out, buffer_in+i+1);
             buffer_out[num_read-i-1] = '\0';
 
@@ -254,7 +254,7 @@ int main(int argc, char **argv)
             // truncate file
             ftruncate(fd, 0);
 
-            // write truncated job list buffer to file
+            // write truncated task list buffer to file
             write(fd, buffer_out, strlen(buffer_out));
 
             // attempt to unlock file
@@ -263,18 +263,18 @@ int main(int argc, char **argv)
             // close file descriptor
             close(fd);
 
-            // free job file buffers
+            // free task file buffers
             free(buffer_in);
             free(buffer_out);
 
             // zero attempts
             attempts = 0;
 
-            // report job launch
+            // report task launch
             if (verbose)
                 printf("Rank %04d launching: %s\n", rank, system_command);
 
-            // retry if job failes
+            // retry if task failes
             while (attempts < max_retries && system(system_command) != 0)
             {
                 attempts++;
@@ -298,7 +298,7 @@ int main(int argc, char **argv)
             {
                 // report process wait
                 if (verbose)
-                    printf("Rank %04d waiting for more jobs\n", rank);
+                    printf("Rank %04d waiting for more tasks\n", rank);
 
                 // attempt to unlock file
                 unlock_file(&fl, fd);
@@ -316,9 +316,9 @@ int main(int argc, char **argv)
 
             else
             {
-                // report that job file is empty
+                // report that task file is empty
                 if (verbose)
-                    printf("Job file is empty: Rank %04d exiting\n", rank);
+                    printf("Task file is empty: Rank %04d exiting\n", rank);
 
                 // attempt to unlock file
                 unlock_file(&fl, fd);
@@ -350,14 +350,14 @@ int main(int argc, char **argv)
      int argc                  number of command-line arguments
      char **argv               array of command-line arguments
      int rank                  process id
-     char *job_file            pointer to job file buffer
+     char *task_file           pointer to task file buffer
      bool *verbose             pointer to verbose flag
      bool *wait_on_idle        pointer to wait flag
      bool *retry               pointer to retry flag
      int *sleep_time           pointer to sleep duration variable
      int *max_retries          pointer to maximum retries variable
 */
-void parse_command_line_arguments(int argc, char **argv, int rank, char *job_file,
+void parse_command_line_arguments(int argc, char **argv, int rank, char *task_file,
     bool *verbose, bool *wait_on_idle, bool* retry, int *sleep_time, int *max_retries)
 {
     int i = 1;
@@ -398,7 +398,7 @@ void parse_command_line_arguments(int argc, char **argv, int rank, char *job_fil
                 {
                     i++;
                     file = true;
-                    strcpy(job_file, argv[i]);
+                    strcpy(task_file, argv[i]);
                 }
 
                 else if (strcmp(argv[i],"-v") == 0 || strcmp(argv[i],"--verbose") == 0)
@@ -451,7 +451,7 @@ void parse_command_line_arguments(int argc, char **argv, int rank, char *job_fil
     {
         if (rank == 0)
         {
-            fprintf(stderr, "[ERROR]: A job file must be specified with \"-f/--file\"\n");
+            fprintf(stderr, "[ERROR]: A task file must be specified with \"-f/--file\"\n");
             fprintf(stderr, "For help run \"taskfarmer -h\"\n");
         }
 
@@ -459,7 +459,7 @@ void parse_command_line_arguments(int argc, char **argv, int rank, char *job_fil
         exit(1);
     }
 
-    // only attempt to launch jobs once if retry option is unset
+    // only attempt to launch tasks once if retry option is unset
     if (!*retry) *max_retries = 1;
     else
     {
@@ -495,17 +495,17 @@ void parse_command_line_arguments(int argc, char **argv, int rank, char *job_fil
 // Print help message to stdout
 void print_help_message()
 {
-    puts("TaskFarmer - a simple task farmer for running serial jobs with mpirun.\n\n"
+    puts("TaskFarmer - a simple task farmer for running serial tasks with mpirun.\n\n"
          "Usage: mpirun -np CORES taskfarmer [-h] -f FILE [-v] [-w] [-r] [-s SLEEP_TIME] [-m MAX_RETRIES]\n\n"
 
          "Available options:\n"
          " -h/--help                 : Print this help information\n"
-         " -f/--file <string>        : Location of job file (required)\n"
+         " -f/--file <string>        : Location of task file (required)\n"
          " -v/--verbose              : Print status updates to stdout\n"
-         " -w/--wait-on-idle         : Wait for more jobs when idle\n"
-         " -r/--retry                : Retry failed jobs\n"
+         " -w/--wait-on-idle         : Wait for more tasks when idle\n"
+         " -r/--retry                : Retry failed tasks\n"
          " -s/--sleep-time <int>     : Sleep duration when idle (seconds)\n"
-         " -m/--max-retries <int>    : Maximum number of retries for failed jobs\n");
+         " -m/--max-retries <int>    : Maximum number of retries for failed tasks\n");
 }
 
 /* Attempt to acquire a file lock

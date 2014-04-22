@@ -21,8 +21,8 @@ sed -i '/CC=*/c\CC=mpicc' config.mk
 make clean
 make
 
-# create job list
-shuf examples/commands.txt | head -n 200 > jobs.txt
+# create task list
+shuf examples/commands.txt | head -n 200 > tasks.txt
 
 # delete existing log file
 if [ -f log ]; then
@@ -34,4 +34,4 @@ export OMPI_MCA_mpi_warn_on_fork=0
 export OMPI_MCA_btl_openib_want_fork_support=0
 
 # launch task farmer
-mpirun -np 16 src/taskfarmer -f jobs.txt -v
+mpirun -np 16 src/taskfarmer -f tasks.txt -v

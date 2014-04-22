@@ -18,8 +18,8 @@ sed -i '/CC=*/c\CC=cc' config.mk
 make clean
 make
 
-# create job list
-shuf examples/commands.txt | head -n 200 > jobs.txt
+# create task list
+shuf examples/commands.txt | head -n 200 > tasks.txt
 
 # delete existing log file
 if [ -f log ]; then
@@ -30,4 +30,4 @@ fi
 export CRAY_ROOTFS=DSL
 
 # launch task farmer
-aprun -n 24 ./src/taskfarmer -f jobs.txt -v
+aprun -n 24 ./src/taskfarmer -f tasks.txt -v

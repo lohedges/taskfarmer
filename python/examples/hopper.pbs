@@ -19,8 +19,8 @@ user=`whoami`
 # make sure we're in the right directory
 cd /scratch/scratchdirs/$user/taskfarmer/python
 
-# create job list
-shuf examples/commands.txt | head -n 200 > jobs.txt
+# create task list
+shuf examples/commands.txt | head -n 200 > tasks.txt
 
 # delete existing log file
 if [ -f log ]; then
@@ -34,4 +34,4 @@ export CRAY_ROOTFS=DSL
 module load python/2.7.3 mpi4py
 
 # launch task farmer
-aprun -n 24 ./taskfarmer.py -f jobs.txt -v
+aprun -n 24 ./taskfarmer.py -f tasks.txt -v

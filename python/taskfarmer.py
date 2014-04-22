@@ -15,31 +15,31 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-"""A simple Python task farmer for running serial jobs with mpirun.
+"""A simple Python task farmer for running serial tasks with mpirun.
 
 About:
 
-Execute a list of system commands from a job file one-by-one. This allows
-many simulations to be run within a single mpirun allocation. A new job is
+Execute a list of system commands from a task file one-by-one. This allows
+many simulations to be run within a single mpirun allocation. A new task is
 launched whenever a process becomes available, hence ensuring 100% utilization
-of the cores for the duration of the wall time, or until the job file is
+of the cores for the duration of the wall time, or until the task file is
 empty, whichever occurs first. This is useful for running many short
 simulations on a small number of cores, or to avoid resource wastage when
-individual simulations have markedly different run times. The job file can
+individual simulations have markedly different run times. The task file can
 be updated dynamically, allowing simulations to be added or deleted as
 required.
 
 A master-worker type scenario is avoided by exploiting a file lock. This
-ensures that only one process has access to the job file at any given time.
+ensures that only one process has access to the task file at any given time.
 
 The order of operations is as follows:
 
-    - A process opens the job file and obtains an exclusive lock.
-    - Jobs are read into a list.
-    - First job is popped off the list.
+    - A process opens the task file and obtains an exclusive lock.
+    - tasks are read into a list.
+    - First task is popped off the list.
     - Truncated list is written back to the file.
     - File is unlocked and closed (other processes can now access it).
-    - Job is checked for validity and executed.
+    - task is checked for validity and executed.
 
 Usage:
 
@@ -50,61 +50,61 @@ PyTaskFarmer supports the following short- and long-form command-line
 options.
 
     -h/--help               show help message and exit
-    -f FILE, --file FILE    location of job file (required)
+    -f FILE, --file FILE    location of task file (required)
     -v, --verbose           enable verbose mode (status updates to stdout)
-    -w, --wait-on-idle      wait for more jobs when idle
-    -r, --retry             retry failed jobs
+    -w, --wait-on-idle      wait for more tasks when idle
+    -r, --retry             retry failed tasks
     -s SLEEP_TIME, --sleep-time SLEEP_TIME
                             sleep duration when idle (seconds)
     -m MAX_RETRIES, --max-retries MAX_RETRIES
-                            maximum number of times to retry failed jobs
+                            maximum number of times to retry failed tasks
     -d [DISALLOWED [DISALLOWED ...]], --disallowed [DISALLOWED [DISALLOWED ...]]
                             list of disallowed commands
 
-Commands from the job file are checked against the "disallowed" list before
-being executed. This avoids undesired consequences if the job file is
+Commands from the task file are checked against the "disallowed" list before
+being executed. This avoids undesired consequences if the task file is
 corrupted, or if I/O error is encountered.
 
 It is possible to change the state of idle cores using the "wait-on-idle"
 option. When set to "True" a core will sleep for a specified period of time
-if it cannot find a job to execute. After the waiting period the process will
-check whether more jobs have been added to the job file. The amount of time
+if it cannot find a task to execute. After the waiting period the process will
+check whether more tasks have been added to the task file. The amount of time
 that a process sleeps for can be changed with the "sleep-time" option, the
 default is 300 seconds. This cycle will continue until the wall time is
 reached. By default "wait-on-idle" is set to "False" meaning that each process
-calls "sys.exit()" when the job file is empty.
+calls "sys.exit()" when the task file is empty.
 
 The "--retry" and "--max-retries" options allow PyTaskFarmer to retry failed
-jobs up to a maximum number of attempts. The default number of retries is 10.
+tasks up to a maximum number of attempts. The default number of retries is 10.
 
 As an example, try running the following:
 
-    shuf tests/commands.txt | head -n 100 > jobs.txt
-            | mpirun -np 4 taskfarmer.py -f jobs.txt
+    shuf tests/commands.txt | head -n 100 > tasks.txt
+            | mpirun -np 4 taskfarmer.py -f tasks.txt
 
 Tips:
 
-    - System commands in the job file should redirect their standard output
+    - System commands in the task file should redirect their standard output
       to a separate log file to avoid littering the standard output of
-      PyTaskFarmer itself. As an example, the jobs.txt file could contain a
+      PyTaskFarmer itself. As an example, the tasks.txt file could contain a
       command like
 
-            echo "Hello, I'm a job" > job.log
+            echo "Hello, I'm a task" > job.log
 
       with PyTaskFarmer launched as follows
 
-            mpirun -np 4 taskfarmer.py -f jobs.txt > sched.log
+            mpirun -np 4 taskfarmer.py -f tasks.txt > sched.log
 
     - The wc command-line utility is handy for checking the number of remaining
-      jobs in a job file without the need to trawl through any of PyTaskFarmer's
-      logs. For example, if job files are stored in a directory called job_files
+      tasks in a task file without the need to trawl through any of PyTaskFarmer's
+      logs. For example, if task files are stored in a directory called task_files
       then the following command will provide a concise output showing the number of
-      remaining jobs in each file as well as the total.
+      remaining tasks in each file as well as the total.
 
-            wc -l job_files/*
+            wc -l task_files/*
 
-    - Since jobs are read from the job file line-by-line it is possible to
-      introduce dependencies between jobs by placing multiple jobs on a single
+    - Since tasks are read from the task file line-by-line it is possible to
+      introduce dependencies between tasks by placing multiple tasks on a single
       line separated by semicolons. For example
 
             perform_calculation > data.txt; analyze_data < data.txt
@@ -112,25 +112,25 @@ Tips:
 Words of caution:
 
     - When individual simulations are very short it is probably dangerous
-      to modify the job file externally as it will likely conflict with
+      to modify the task file externally as it will likely conflict with
       PyTaskFarmer's I/O. The file should only be modified when all cores are
-      active (running jobs) or in an idle state (job file is emtpy). It is
-      recommended to modify the job file using a redirection, rather than
-      opening it and editing directly, e.g. cat more_jobs >> jobs.txt.
+      active (running tasks) or in an idle state (task file is emtpy). It is
+      recommended to modify the task file using a redirection, rather than
+      opening it and editing directly, e.g. cat more_tasks >> tasks.txt.
 
-    - At present, when the "--retry" option is set, failed jobs are only
+    - At present, when the "--retry" option is set, failed tasks are only
       relaunched by the same process on which they failed. This is fine when
-      job failures are caused by buggy or unstable code, but is unlikely to
+      task failures are caused by buggy or unstable code, but is unlikely to
       help when failure results from a bad core or node on a cluster.
 
-    - Very large job files containing complex shell commands can be problematic
+    - Very large task files containing complex shell commands can be problematic
       since each process needs to be able to load the file to memory. This
       problem can be mitigated through judicious choice of command names
       (e.g. using short form options) and use of relative paths where possible.
 
     - For clusters that don't impose a wall time, PyTaskFarmer provides a way
-      of running an infinite number of jobs. As long as the job file isn't
-      empty jobs will continue to be launched on free cores within the
+      of running an infinite number of tasks. As long as the task file isn't
+      empty tasks will continue to be launched on free cores within the
       allocation. Use your new power wisely!
 """
 
@@ -154,42 +154,42 @@ class validate_argument(argparse.Action):
 
 # create argument parser object
 parser = argparse.ArgumentParser(description=
-    'A simple Python task farmer for running serial jobs with mpirun.')
+    'A simple Python task farmer for running serial tasks with mpirun.')
 
 # parse command-line options
 parser.add_argument('-f','--file', type=str,
-    help='location of job file', required=True)
+    help='location of task file', required=True)
 parser.add_argument('-v','--verbose', action='store_true',
     help='enable verbose mode', default=False)
 parser.add_argument('-w','--wait-on-idle', action='store_true',
-    help='wait for more jobs when idle', default=False)
+    help='wait for more tasks when idle', default=False)
 parser.add_argument('-r','--retry', action='store_true',
-    help='retry failed jobs', default=False)
+    help='retry failed tasks', default=False)
 parser.add_argument('-s','--sleep-time', action=validate_argument, type=int,
     help='sleep duration when idle (seconds)', default=300)
 parser.add_argument('-m','--max-retries', action=validate_argument, type=int,
-    help='maximum times to retry failed jobs', default=10)
+    help='maximum times to retry failed tasks', default=10)
 parser.add_argument('-d','--disallowed', nargs='*',
     help='disallowed commands', default=['rm'])
 args = parser.parse_args()
 
-# only attempt to launch jobs once if retry option is unset
+# only attempt to launch tasks once if retry option is unset
 if not args.retry:
     max_retries = 1
 
 # check if command is valid
-def is_allowed(job):
+def is_allowed(task):
     # check command isn't empty string
-    if job.isspace():
-        return False, "job string is empty"
+    if task.isspace():
+        return False, "task string is empty"
 
     # check for null character
-    if '\x00' in job:
+    if '\x00' in task:
         return False, "null character present"
 
     # check command isn't empty
-    if len(job) is 0:
-        return False, "job string has zero length"
+    if len(task) is 0:
+        return False, "task string has zero length"
 
     # check all disallowed commands
     for cmd in args.disallowed:
@@ -197,40 +197,40 @@ def is_allowed(job):
         cmd2 = " " + cmd + " "
 
         # invalid command
-        if (job.startswith(cmd1)) or (cmd2 in job):
+        if (task.startswith(cmd1)) or (cmd2 in task):
             return False, cmd + " found"
 
     return True, "no error"
 
 # loop indefinitely
 while True:
-    # try to open the job file
+    # try to open the task file
     try:
         f = open(args.file, 'r+')
     except IOError:
-        print >> sys.stderr, "I/O Error:", job_file, "doesn't exist!"
+        print >> sys.stderr, "I/O Error:", task_file, "doesn't exist!"
         sys.exit()
 
     # lock file
     flock(f, LOCK_EX)
 
-    # read file into job list
-    jobs = f.readlines()
+    # read file into task list
+    tasks = f.readlines()
 
-    # work out number of jobs
-    num_jobs = len(jobs)
+    # work out number of tasks
+    num_tasks = len(tasks)
 
-    # check that there are jobs to process
-    if num_jobs > 0:
-        # pop first job off job list
-        job = jobs.pop(0).strip('\n')
+    # check that there are tasks to process
+    if num_tasks > 0:
+        # pop first task off task list
+        task = tasks.pop(0).strip('\n')
 
         # rewind to beginning of file
         f.seek(0)
         f.truncate()
 
-        # write remaining job list to file
-        f.writelines(jobs)
+        # write remaining task list to file
+        f.writelines(tasks)
 
         # ensure buffer is flushed before unlocking
         f.flush()
@@ -242,21 +242,21 @@ while True:
         # zero attempts
         attempts = 0
 
-        # check that job is allowed
-        allowed, error = is_allowed(job)
+        # check that task is allowed
+        allowed, error = is_allowed(task)
         if allowed:
             if args.verbose:
-                print "Rank %04d" %rank, "launching:", job
+                print "Rank %04d" %rank, "launching:", task
 
-            # attempt to execute job
-            while attempts < args.max_retries and os.system(job) != 0:
+            # attempt to execute task
+            while attempts < args.max_retries and os.system(task) != 0:
                 attempts += 1
                 if args.verbose:
                     if args.retry:
                         print >> sys.stderr, "Warning: system command failed,", \
-                            job, "(%d/%d)" % (attempts, args.max_retries)
+                            task, "(%d/%d)" % (attempts, args.max_retries)
                     else:
-                        print >> sys.stderr, "Warning: system command failed,", job
+                        print >> sys.stderr, "Warning: system command failed,", task
         else:
             print >> sys.stderr, "Warning:", error
 
@@ -264,7 +264,7 @@ while True:
         if args.wait_on_idle:
             # sleep for wait period
             if args.verbose:
-                print "Rank %04d" %rank, "waiting for more jobs"
+                print "Rank %04d" %rank, "waiting for more tasks"
 
             # unlock and close file
             flock(f, LOCK_UN)
@@ -273,9 +273,9 @@ while True:
             # sleep
             time.sleep(args.sleep_time)
         else:
-            # all jobs launched, clean up and exit
+            # all tasks launched, clean up and exit
             if args.verbose:
-                print "Job file is empty: Rank %04d" %rank, "exiting"
+                print "Task file is empty: Rank %04d" %rank, "exiting"
 
             # unlock and close file
             flock(f, LOCK_UN)

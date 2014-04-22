@@ -11,8 +11,8 @@ user=`whoami`
 # make sure we're in the right directory
 cd /clusterfs/vulcan/pscratch/$user/taskfarmer/python
 
-# create job list
-shuf examples/commands.txt | head -n 200 > jobs.txt
+# create task list
+shuf examples/commands.txt | head -n 200 > tasks.txt
 
 # delete existing log file
 if [ -f log ]; then
@@ -23,4 +23,4 @@ fi
 module load python/2.7.3 mpi4py
 
 # launch task farmer
-mpirun -np 16 taskfarmer.py -f jobs.txt -v
+mpirun -np 16 taskfarmer.py -f tasks.txt -v
