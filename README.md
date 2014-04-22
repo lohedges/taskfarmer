@@ -23,7 +23,7 @@ The order of operations is as follows:
 * First task is read and buffer is truncated.
 * Truncated buffer is written back to the file.
 * File is unlocked and closed (other processes can now access it).
-* task is launched.
+* Task is launched.
 
 A Python implementation is provided in the `python/` directory, although this
 is known to suffer from significant start up lag on clusters that don't

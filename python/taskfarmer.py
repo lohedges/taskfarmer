@@ -39,7 +39,7 @@ The order of operations is as follows:
     - First task is popped off the list.
     - Truncated list is written back to the file.
     - File is unlocked and closed (other processes can now access it).
-    - task is checked for validity and executed.
+    - Task is checked for validity and executed.
 
 Usage:
 
