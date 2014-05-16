@@ -1,6 +1,6 @@
 # TaskFarmer
 
-Copyright &copy; 2013 Lester Hedges.
+Copyright &copy; 2013 Lester Hedges. Released under the [GPL](http://www.gnu.org/copyleft/gpl.html).
 
 ## About
 Execute a list of system commands from a task file one-by-one. This allows
