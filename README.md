@@ -89,7 +89,8 @@ Try the following:
 $ shuf examples/commands.txt | head -n 100 > tasks.txt | mpirun -np 4 src/taskfarmer -f tasks.txt
 ```
 
-A collection of example PBS batch scripts are included in the `examples/` directory.
+A collection of example [PBS](http://en.wikipedia.org/wiki/Portable_Batch_System) and
+[SLURM](https://computing.llnl.gov/linux/slurm/) batch scripts are included in the `examples/` directory.
 
 ## Tips
 * System commands in the task file should redirect their standard output
