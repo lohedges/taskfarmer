@@ -274,7 +274,7 @@ int main(int argc, char **argv)
             if (verbose)
                 printf("Rank %04d launching: %s\n", rank, system_command);
 
-            // retry if task failes
+            // retry if task fails
             while (attempts < max_retries && system(system_command) != 0)
             {
                 attempts++;
