@@ -428,7 +428,16 @@ void parse_command_line_arguments(int argc, char **argv, int rank, char *task_fi
                     *max_retries = atof(argv[i]);
                 }
 
-                else if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i],"--help") == 0) {}
+                else if (strcmp(argv[i],"-h") == 0 || strcmp(argv[i],"--help") == 0)
+                {
+                    if (rank == 0)
+                    {
+                        print_help_message();
+                    }
+
+                    MPI_Finalize();
+                    exit(0);
+                }
 
                 else
                 {
