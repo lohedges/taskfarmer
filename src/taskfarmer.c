@@ -137,14 +137,14 @@
      allocation. Use your new power wisely!
 */
 
+#include <errno.h>
+#include <fcntl.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <sys/stat.h>
-#include <mpi.h>
+#include <unistd.h>
 
 typedef enum { false, true } bool;
 
@@ -195,9 +195,6 @@ int main(int argc, char **argv)
     // file descriptor
     int fd;
 
-    // number of bytes read from file
-    int num_read;
-
     // loop indefinitely
     while (true)
     {
@@ -220,18 +217,22 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        // allocate buffer memory
-        buffer_in = malloc(file_stats.st_size);
-        buffer_out = malloc(file_stats.st_size);
-
-        // read task file into buffer
-        num_read = read(fd, buffer_in, file_stats.st_size);
-
         // check that there are tasks to process
-        if (num_read > 0)
+        if (file_stats.st_size > 0)
         {
+            // allocate buffer memory
+            buffer_in = malloc(1+file_stats.st_size);
+            buffer_out = malloc(1+file_stats.st_size);
+
+            // initialize memory
+            memset(buffer_in, '\0', sizeof(char)*(1+file_stats.st_size));
+            memset(buffer_out, '\0', sizeof(char)*(1+file_stats.st_size));
+
+            // read task file into buffer
+            read(fd, buffer_in, file_stats.st_size);
+
             // read first task
-            for (i=0;i<num_read;i++)
+            for (i=0;i<file_stats.st_size;i++)
             {
                 // found newline
                 if (buffer_in[i] == '\n') break;
@@ -246,7 +247,7 @@ int main(int argc, char **argv)
 
             // copy remaining tasks into output buffer and terminate
             strcpy(buffer_out, buffer_in+i+1);
-            buffer_out[num_read-i-1] = '\0';
+            buffer_out[file_stats.st_size-i-1] = '\0';
 
             // return to start of file
             lseek(fd, 0, SEEK_SET);
@@ -306,10 +307,6 @@ int main(int argc, char **argv)
                 // close file descriptor
                 close(fd);
 
-                // free memory
-                free(buffer_in);
-                free(buffer_out);
-
                 // sleep for wait period
                 sleep(sleep_time);
             }
@@ -325,10 +322,6 @@ int main(int argc, char **argv)
 
                 // close file descriptor
                 close(fd);
-
-                // free memory
-                free(buffer_in);
-                free(buffer_out);
 
                 // clean up and exit
                 MPI_Finalize();
