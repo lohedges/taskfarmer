@@ -245,9 +245,8 @@ int main(int argc, char **argv)
             strncpy(system_command, buffer_in, i);
             system_command[i] = '\0';
 
-            // copy remaining tasks into output buffer and terminate
+            // copy remaining tasks into output buffer
             strcpy(buffer_out, buffer_in+i+1);
-            buffer_out[file_stats.st_size-i-1] = '\0';
 
             // return to start of file
             lseek(fd, 0, SEEK_SET);
