@@ -221,12 +221,8 @@ int main(int argc, char **argv)
         if (file_stats.st_size > 0)
         {
             // allocate buffer memory
-            buffer_in = malloc(1+file_stats.st_size);
-            buffer_out = malloc(1+file_stats.st_size);
-
-            // initialize memory
-            memset(buffer_in, '\0', sizeof(char)*(1+file_stats.st_size));
-            memset(buffer_out, '\0', sizeof(char)*(1+file_stats.st_size));
+            buffer_in = calloc(1+file_stats.st_size, sizeof(char));
+            buffer_out = calloc(1+file_stats.st_size, sizeof(char));
 
             // read task file into buffer
             read(fd, buffer_in, file_stats.st_size);
@@ -239,11 +235,10 @@ int main(int argc, char **argv)
             }
 
             // allocate memory for system command
-            system_command = malloc((i+1)*sizeof(char));
+            system_command = calloc((i+1), sizeof(char));
 
-            // copy task into system command buffer and terminate
+            // copy task into system command buffer
             strncpy(system_command, buffer_in, i);
-            system_command[i] = '\0';
 
             // copy remaining tasks into output buffer
             strcpy(buffer_out, buffer_in+i+1);
