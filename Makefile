@@ -1,32 +1,43 @@
-# TaskFarmer makefile
-#
-# Author : Lester. O. Hedges
-# Email  : lester.hedges@gmail.com
-# Date   : July 11th 2013
+# TaskFarmer Makefile
 
-# Tell make that these are phony targets
+# Tell make that these are phony targets.
 .PHONY: all clean install uninstall
 
-include config.mk
+# Default C compiler (assuming Open MPI).
+CC := mpicc
 
-# Build all of the executable files
-all:
-	$(MAKE) -C src
+# Default installation directory.
+PREFIX := /usr/local
 
-# Clean up the executable files
+# Default install command
+INSTALL := install
+
+# Flags for install command for executable.
+IFLAGS_EXEC := -m 0755
+
+# Flags for install command for non-executable files.
+IFLAGS := -m 0644
+
+# Build the taskfarmer executable.
+all: taskfarmer
+
+taskfarmer: src/taskfarmer.c
+	$(CC) src/taskfarmer.c -o taskfarmer
+
+# Remove the taskfarmer executable.
 clean:
-	$(MAKE) -C src clean
+	rm -f taskfarmer
 
-# Install the executable and man page
+# Install the executable and man page.
 install:
-	$(MAKE) -C src
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/bin
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/man
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/man/man1
-	$(INSTALL) $(IFLAGS_EXEC) src/taskfarmer $(PREFIX)/bin
+	$(INSTALL) $(IFLAGS_EXEC) taskfarmer $(PREFIX)/bin
 	$(INSTALL) $(IFLAGS) man/taskfarmer.1 $(PREFIX)/man/man1
+	gzip -9 $(PREFIX)/man/man1/taskfarmer.1
 
-# Uninstall the executable and man page
+# Uninstall the executable and man page.
 uninstall:
 	rm -f $(PREFIX)/bin/taskfarmer
-	rm -f $(PREFIX)/man/man1/taskfarmer.1
+	rm -f $(PREFIX)/man/man1/taskfarmer.1.gz
