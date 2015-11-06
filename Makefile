@@ -29,7 +29,7 @@ clean:
 	rm -f taskfarmer
 
 # Install the executable and man page.
-install:
+install: all
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/bin
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/man
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/man/man1
