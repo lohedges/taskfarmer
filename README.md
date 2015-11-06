@@ -88,7 +88,7 @@ tasks up to a maximum number of attempts. The default number of retries is 10.
 Try the following:
 
 ``` bash
-$ shuf examples/commands.txt | head -n 100 > tasks.txt | mpirun -np 4 src/taskfarmer -f tasks.txt
+$ shuf examples/commands.txt | head -n 100 > tasks.txt | mpirun -np 4 taskfarmer -f tasks.txt
 ```
 
 A collection of example [PBS](http://en.wikipedia.org/wiki/Portable_Batch_System) and
@@ -106,7 +106,7 @@ A collection of example [PBS](http://en.wikipedia.org/wiki/Portable_Batch_System
    with TaskFarmer launched as follows
 
 	``` bash
-	$ mpirun -np 4 taskfarmer -f tasks.txt > sched.log
+	$ mpirun -np 4 taskfarmer -f tasks.txt > tasks.log
 	```
 
 * The `wc` command-line utility is handy for checking the number of remaining

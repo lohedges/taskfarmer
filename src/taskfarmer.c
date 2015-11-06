@@ -75,7 +75,7 @@
   As an example, try running the following
 
    shuf tests/commands.txt | head -n 100 > tasks.txt
-            | mpirun -np 4 src/taskfarmer -f tasks.txt
+            | mpirun -np 4 taskfarmer -f tasks.txt
 
   Tips:
 
@@ -88,7 +88,7 @@
 
      with TaskFarmer launched as follows
 
-      mpirun -np 4 taskfarmer -f tasks.txt > sched.log
+      mpirun -np 4 taskfarmer -f tasks.txt > tasks.log
 
    - The wc command-line utility is handy for checking the number of remaining
      tasks in a task file without the need to trawl through any of TaskFarmer's
