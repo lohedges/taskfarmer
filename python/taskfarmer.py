@@ -111,6 +111,11 @@ Tips:
 
 Words of caution:
 
+    - If you are using a BeeGFS parallel file system (formerly FhGFS) then
+      you'll need to set the client configuration variable "tuneUseGlobalFileLocks
+      = true" to enable file locking across multiple nodes. (By default file
+      locking only works locally on individual nodes.)
+
     - When individual simulations are very short it is probably dangerous
       to modify the task file externally as it will likely conflict with
       PyTaskFarmer's I/O. The file should only be modified when all cores are

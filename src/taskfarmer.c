@@ -93,8 +93,8 @@
    - The wc command-line utility is handy for checking the number of remaining
      tasks in a task file without the need to trawl through any of TaskFarmer's
      logs. For example, if task files are stored in a directory called task_files
-     then the following command will provide a concise output showing the number of
-     remaining tasks in each file as well as the total.
+     then the following command will provide a concise output showing the number
+     of remaining tasks in each file as well as the total.
 
       wc -l task_files/*
 
@@ -120,6 +120,11 @@
 
         export OMPI_MCA_mpi_warn_on_fork=0
         export OMPI_MCA_btl_openib_want_fork_support=0
+
+   - If you are using a BeeGFS parallel file system (formerly FhGFS) then
+     you'll need to set the client configuration variable "tuneUseGlobalFileLocks
+     = true" to enable file locking across multiple nodes. (By default file
+	 locking only works locally on individual nodes.)
 
    - At present, when the "--retry" option is set, failed tasks are only
      relaunched by the same process on which they failed. This is fine when
