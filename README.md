@@ -91,6 +91,10 @@ Try the following:
 $ shuf examples/commands.txt | head -n 100 > tasks.txt | mpirun -np 4 taskfarmer -f tasks.txt
 ```
 
+The movie below shows an example of TaskFarmer in action.
+
+![TaskFarmer in action.](https://raw.githubusercontent.com/lohedges/assets/master/taskfarmer/animations/taskfarmer.gif)
+
 A collection of example [PBS](http://en.wikipedia.org/wiki/Portable_Batch_System) and
 [SLURM](https://computing.llnl.gov/linux/slurm/) batch scripts are included in the `examples/` directory.
 
