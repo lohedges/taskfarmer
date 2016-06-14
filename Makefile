@@ -35,7 +35,7 @@ install: all
 	$(INSTALL) -d $(IFLAGS_EXEC) $(PREFIX)/man/man1
 	$(INSTALL) $(IFLAGS_EXEC) taskfarmer $(PREFIX)/bin
 	$(INSTALL) $(IFLAGS) man/taskfarmer.1 $(PREFIX)/man/man1
-	gzip -9 $(PREFIX)/man/man1/taskfarmer.1
+	gzip -9f $(PREFIX)/man/man1/taskfarmer.1
 
 # Uninstall the executable and man page.
 uninstall:
