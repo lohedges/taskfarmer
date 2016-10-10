@@ -272,7 +272,7 @@ int main(int argc, char **argv)
 
             // report task launch
             if (verbose)
-                printf("Rank %04d launching: %s\n", rank, system_command);
+                printf("[INFO]: Rank %04d launching: %s\n", rank, system_command);
 
             // retry if task fails
             while (attempts < max_retries && system(system_command) != 0)
@@ -282,10 +282,17 @@ int main(int argc, char **argv)
                 if (verbose)
                 {
                     if (retry)
-                        printf("Warning: system command failed, %s (%d/%d)\n", system_command, attempts, max_retries);
+                        printf("[WARNING]: system command failed, %s (%d/%d)\n", system_command, attempts, max_retries);
                     else
-                        printf("Warning: system command failed, %s\n", system_command);
+                        printf("[WARNING]: system command failed, %s\n", system_command);
                 }
+            }
+
+            // task was successful
+            if (attempts < max_retries)
+            {
+                if (verbose)
+                    printf("[INFO]: Rank %04d completed: %s\n", rank, system_command);
             }
 
             // free system command buffer
@@ -298,7 +305,7 @@ int main(int argc, char **argv)
             {
                 // report process wait
                 if (verbose)
-                    printf("Rank %04d waiting for more tasks\n", rank);
+                    printf("[INFO]: Rank %04d waiting for more tasks\n", rank);
 
                 // attempt to unlock file
                 unlock_file(&fl, fd);
@@ -314,7 +321,7 @@ int main(int argc, char **argv)
             {
                 // report that task file is empty
                 if (verbose)
-                    printf("Task file is empty: Rank %04d exiting\n", rank);
+                    printf("[INFO]: Task file is empty: Rank %04d exiting\n", rank);
 
                 // attempt to unlock file
                 unlock_file(&fl, fd);
