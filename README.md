@@ -44,25 +44,25 @@ or override the variable from the command-line
 To compile TaskFarmer, then install the executable and man page:
 
 ```bash
-$ make
-$ sudo make install
+make
+sudo make install
 ```
 
 TaskFarmer can be completely removed from your system as follows:
 
 ```bash
-$ sudo make uninstall
+sudo make uninstall
 ```
 
 To build TaskFarmer using a different compiler (e.g. Cray):
 
 ```bash
-$ make CC=cc
+make CC=cc
 ```
 
 ## Usage
 ``` bash
-$ mpirun -np CORES taskfarmer [-h] -f FILE [-v] [-w] [-r] [-s SLEEP_TIME] [-m MAX_RETRIES]
+mpirun -np CORES taskfarmer [-h] -f FILE [-v] [-w] [-r] [-s SLEEP_TIME] [-m MAX_RETRIES]
 ```
 
 TaskFarmer supports the following short- and long-form command-line
@@ -94,7 +94,7 @@ tasks up to a maximum number of attempts. The default number of retries is 10.
 Try the following:
 
 ``` bash
-$ shuf examples/commands.txt | head -n 100 > tasks.txt | mpirun -np 4 taskfarmer -f tasks.txt
+shuf examples/commands.txt | head -n 100 > tasks.txt | mpirun -np 4 taskfarmer -f tasks.txt
 ```
 
 The movie below shows an example of TaskFarmer in action.
@@ -110,13 +110,13 @@ A collection of example [PBS](http://en.wikipedia.org/wiki/Portable_Batch_System
   itself. As an example, the `tasks.txt` file could contain a command like
 
 	``` bash
-	$ echo "Hello, I'm a task" > job.log
+	echo "Hello, I'm a task" > job.log
 	```
 
    with TaskFarmer launched as follows
 
 	``` bash
-	$ mpirun -np 4 taskfarmer -f tasks.txt > tasks.log
+	mpirun -np 4 taskfarmer -f tasks.txt > tasks.log
 	```
 
 * The `wc` command-line utility is handy for checking the number of remaining
@@ -126,7 +126,7 @@ A collection of example [PBS](http://en.wikipedia.org/wiki/Portable_Batch_System
   remaining tasks in each file as well as the total.
 
 	``` bash
-	$ wc -l task_files/*
+	wc -l task_files/*
 	```
 
 * Since tasks are read from the task file line-by-line it is possible to
@@ -134,7 +134,7 @@ A collection of example [PBS](http://en.wikipedia.org/wiki/Portable_Batch_System
   line separated by semicolons. For example
 
 	``` bash
-	$ perform_calculation > data.txt; analyze_data < data.txt
+	perform_calculation > data.txt; analyze_data < data.txt
 	```
 
 ## Words of caution
@@ -151,8 +151,8 @@ A collection of example [PBS](http://en.wikipedia.org/wiki/Portable_Batch_System
   fork by setting the following (BASH style) environment variables:
 
 ``` bash
-$ export OMPI_MCA_mpi_warn_on_fork=0
-$ export OMPI_MCA_btl_openib_want_fork_support=0
+export OMPI_MCA_mpi_warn_on_fork=0
+export OMPI_MCA_btl_openib_want_fork_support=0
 ```
 
 * If you are using a [BeeGFS](http://www.beegfs.com) parallel file system
