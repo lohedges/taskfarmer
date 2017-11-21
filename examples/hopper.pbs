@@ -30,4 +30,4 @@ fi
 export CRAY_ROOTFS=DSL
 
 # launch task farmer
-aprun -n 24 ./src/taskfarmer -f tasks.txt -v
+aprun -n 24 taskfarmer -f tasks.txt -v
