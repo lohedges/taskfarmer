@@ -1,6 +1,6 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
-# Copyright (c) 2013, 2014 Lester Hedges <lester.hedges@gmail.com>
+# Copyright (c) 2013, 2014, 2018 Lester Hedges <lester.hedges@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -139,12 +139,15 @@ Words of caution:
       allocation. Use your new power wisely!
 """
 
-import os
+from __future__ import print_function
+
+from fcntl import flock, LOCK_EX, LOCK_UN
+from mpi4py import MPI
+from subprocess import PIPE, Popen
+
+import argparse
 import sys
 import time
-import argparse
-from mpi4py import MPI
-from fcntl import flock, LOCK_EX, LOCK_UN
 
 # process rank
 rank = MPI.COMM_WORLD.Get_rank()
@@ -213,8 +216,10 @@ while True:
     try:
         f = open(args.file, 'r+')
     except IOError:
-        print >> sys.stderr, "I/O Error:", task_file, "doesn't exist!"
-        sys.exit()
+        if rank == 0:
+            raise
+        else:
+            sys.exit()
 
     # lock file
     flock(f, LOCK_EX)
@@ -251,25 +256,29 @@ while True:
         allowed, error = is_allowed(task)
         if allowed:
             if args.verbose:
-                print "Rank %04d" %rank, "launching:", task
+                print("Rank %04d" %rank, "launching:", task)
 
-            # attempt to execute task
-            while attempts < args.max_retries and os.system(task) != 0:
+            # attempt to execute task as a subprocess
+            child = Popen(task, shell=True, stdout=PIPE, stderr=PIPE)
+            streamdata = child.communicate()[0]
+            rc = child.returncode
+
+            while attempts < args.max_retries and rc != 0:
                 attempts += 1
                 if args.verbose:
                     if args.retry:
-                        print >> sys.stderr, "Warning: system command failed,", \
-                            task, "(%d/%d)" % (attempts, args.max_retries)
+                        print("Warning: system command failed:", task,
+                            "(%d/%d)" % (attempts, args.max_retries))
                     else:
-                        print >> sys.stderr, "Warning: system command failed,", task
+                        print("Warning: system command failed:", task)
         else:
-            print >> sys.stderr, "Warning:", error
+            print("Warning:", error)
 
     else:
         if args.wait_on_idle:
             # sleep for wait period
             if args.verbose:
-                print "Rank %04d" %rank, "waiting for more tasks"
+                print("Rank %04d" %rank, "waiting for more tasks")
 
             # unlock and close file
             flock(f, LOCK_UN)
@@ -280,7 +289,7 @@ while True:
         else:
             # all tasks launched, clean up and exit
             if args.verbose:
-                print "Task file is empty: Rank %04d" %rank, "exiting"
+                print("Task file is empty: Rank %04d" %rank, "exiting")
 
             # unlock and close file
             flock(f, LOCK_UN)
